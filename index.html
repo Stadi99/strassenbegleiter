@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Strassenbegleiter</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #e8c547;
+    --accent2: #4fc3a1;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --danger: #e85447;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,197,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,197,71,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0 80px 0;
+  }
+
+  /* Header */
+  header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .logo span {
+    color: var(--text);
+    font-size: 13px;
+    display: block;
+    letter-spacing: 4px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+    box-shadow: 0 0 0 0 transparent;
+  }
+  .status-dot.active {
+    background: var(--accent2);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.error { background: var(--danger); }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(79,195,161,0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(79,195,161,0); }
+    100% { box-shadow: 0 0 0 0 rgba(79,195,161,0); }
+  }
+
+  /* Main content */
+  main {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Start screen */
+  #start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    gap: 32px;
+  }
+
+  .hero-icon {
+    width: 80px;
+    height: 80px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: var(--accent);
+    position: relative;
+  }
+
+  .hero-icon::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(232,197,71,0.2);
+  }
+
+  .start-text h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .start-text p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0f;
+    border: none;
+    padding: 16px 40px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-primary:hover { background: #f0d060; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-stop {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 10px 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn-stop:hover { background: rgba(232,84,71,0.1); }
+
+  /* Active screen */
+  #active-screen { display: none; flex-direction: column; gap: 16px; }
+
+  /* Location card */
+  .location-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .location-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .location-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .location-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+    min-height: 48px;
+  }
+
+  .location-region {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .coords {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--border);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+  }
+
+  /* Info card */
+  .info-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 120px;
+    position: relative;
+  }
+
+  .info-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .info-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    text-transform: uppercase;
+  }
+
+  .info-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .info-text.loading {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value.accent { color: var(--accent); }
+
+  /* Audio controls */
+  .audio-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .speaking-indicator {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    height: 24px;
+  }
+
+  .bar {
+    width: 3px;
+    background: var(--accent2);
+    border-radius: 2px;
+    animation: none;
+    height: 4px;
+    transition: height 0.1s;
+  }
+
+  .speaking-indicator.active .bar:nth-child(1) { animation: equalizer 0.8s ease infinite; }
+  .speaking-indicator.active .bar:nth-child(2) { animation: equalizer 0.8s ease 0.15s infinite; }
+  .speaking-indicator.active .bar:nth-child(3) { animation: equalizer 0.8s ease 0.3s infinite; }
+  .speaking-indicator.active .bar:nth-child(4) { animation: equalizer 0.8s ease 0.45s infinite; }
+  .speaking-indicator.active .bar:nth-child(5) { animation: equalizer 0.8s ease 0.6s infinite; }
+
+  @keyframes equalizer {
+    0%, 100% { height: 4px; }
+    50% { height: 20px; }
+  }
+
+  .audio-status {
+    flex: 1;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .mute-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .mute-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mute-btn.muted { border-color: var(--danger); color: var(--danger); }
+
+  /* Control bar */
+  .control-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Log */
+  .log-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .log-header {
+    padding: 10px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .log-body {
+    max-height: 140px;
+    overflow-y: auto;
+    padding: 10px 16px;
+    display: none;
+  }
+
+  .log-body.open { display: block; }
+
+  .log-entry {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(42,42,63,0.5);
+    display: flex;
+    gap: 10px;
+  }
+
+  .log-time { color: var(--border); min-width: 48px; }
+
+  /* Settings */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-label {
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .settings-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--border);
+    border-radius: 24px;
+    transition: 0.3s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  .toggle input:checked + .toggle-slider { background: rgba(232,197,71,0.3); }
+  .toggle input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background: var(--accent);
+  }
+
+  /* Range input */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  /* Notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--card);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    transition: transform 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+    max-width: 90vw;
+    text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Tab bar */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: rgba(18,18,26,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: none;
+    z-index: 20;
+  }
+  .tab-bar.visible { display: flex; }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 0;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+  }
+
+  .tab-btn .tab-icon { font-size: 18px; }
+  .tab-btn.active { color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: flex; flex-direction: column; gap: 16px; }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .interval-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .interval-btn {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .interval-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,197,71,0.05); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">
+      Strassen<br>
+      <span>BEGLEITER</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="status-dot" id="statusDot"></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- START SCREEN -->
+    <div id="start-screen">
+      <div class="hero-icon">🚗</div>
+      <div class="start-text">
+        <h2>Bereit zur Fahrt?</h2>
+        <p>Der Strassenbegleiter liest dir automatisch Infos zur Gegend vor, sobald du einen neuen Ort durchfährst.</p>
+      </div>
+      <button class="btn-primary" onclick="startTracking()">
+        ▶ STARTEN
+      </button>
+      <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
+    </div>
+
+    <!-- ACTIVE SCREEN -->
+    <div id="active-screen">
+      <div class="tab-content active" id="tab-fahrt">
+        <!-- Location Card -->
+        <div class="location-card">
+          <div class="location-label">Aktueller Ort</div>
+          <div class="location-name" id="locationName">—</div>
+          <div class="location-region" id="locationRegion">Warte auf GPS...</div>
+          <div class="coords">
+            <span id="coordLat">LAT —</span>
+            <span id="coordLon">LON —</span>
+          </div>
+        </div>
+
+        <!-- Audio bar -->
+        <div class="audio-bar">
+          <div class="speaking-indicator" id="speakingIndicator">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+          <div class="audio-status" id="audioStatus">Bereit</div>
+          <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊 TON</button>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Einwohner</div>
+            <div class="stat-value accent" id="statPop">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Kanton / Land</div>
+            <div class="stat-value" id="statRegion">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Fläche</div>
+            <div class="stat-value" id="statArea">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Höhe ü.M.</div>
+            <div class="stat-value" id="statElev">—</div>
+          </div>
+        </div>
+
+        <!-- Info text -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <div class="info-title">📡 Ortsbeschreibung</div>
+            <button class="btn-secondary" style="padding:4px 10px;font-size:10px;" onclick="readAgain()">↺ Nochmal</button>
+          </div>
+          <div class="info-text loading" id="infoText">Warte auf Standortdaten...</div>
+        </div>
+
+        <!-- Control bar -->
+        <div class="control-bar">
+          <button class="btn-stop" onclick="stopTracking()">■ STOP</button>
+          <button class="btn-secondary" onclick="forceUpdate()">⟳ Jetzt aktualisieren</button>
+        </div>
+
+        <!-- Log -->
+        <div class="log-card">
+          <div class="log-header" onclick="toggleLog()">
+            <span>▾</span> FAHRTVERLAUF
+            <span id="logCount" style="margin-left:auto;color:var(--accent)">0 Orte</span>
+          </div>
+          <div class="log-body" id="logBody"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div class="tab-content" id="tab-einstellungen">
+        <div class="section-title">Einstellungen</div>
+
+        <div class="info-card">
+          <div class="info-title" style="margin-bottom:14px;">🔔 Abstand zwischen Infos</div>
+          <div class="interval-grid" id="intervalGrid">
+            <button class="interval-btn" onclick="setInterval_(1)">1 min</button>
+            <button class="interval-btn selected" onclick="setInterval_(3)">3 min</button>
+            <button class="interval-btn" onclick="setInterval_(5)">5 min</button>
+            <button class="interval-btn" onclick="setInterval_(10)">10 min</button>
+            <button class="interval-btn" onclick="setInterval_(15)">15 min</button>
+            <button class="interval-btn" onclick="setInterval_(0)">Nur Ort</button>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-title" style="margin-bottom:14px;">🗣 Sprachausgabe</div>
+          <div style="margin-bottom:12px;">
+            <div class="settings-sub" style="margin-bottom:8px;">STIMME WÄHLEN</div>
+            <div id="voiceList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;">
+              <div style="color:var(--muted);font-size:12px;font-family:'DM Mono',monospace;">Lade Stimmen...</div>
+            </div>
+          </div>
+          <div class="settings-row" style="border-top:1px solid var(--border);padding-top:14px;">
+            <div>
+              <div class="settings-label">Geschwindigkeit</div>
+              <div class="settings-sub" id="rateLabel">normal</div>
+            </div>
+            <input type="range" id="speechRate" min="0.6" max="1.4" step="0.05" value="0.95" oninput="updateRate(this.value)">
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Tonhöhe</div>
+              <div class="settings-sub" id="pitchLabel">normal</div>
+            </div>
+            <input type="range" id="speechPitch" min="0.6" max="1.4" step="0.1" value="1.0" oninput="updatePitch(this.value)">
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-title" style="margin-bottom:14px;">📚 Infokategorien</div>
+          <div class="settings-row">
+            <div class="settings-label">Einwohnerzahl</div>
+            <label class="toggle"><input type="checkbox" id="tog-pop" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Lage & Region</div>
+            <label class="toggle"><input type="checkbox" id="tog-region" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Geschichte</div>
+            <label class="toggle"><input type="checkbox" id="tog-history" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Sehenswürdigkeiten</div>
+            <label class="toggle"><input type="checkbox" id="tog-sights" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Wirtschaft & Bildung</div>
+            <label class="toggle"><input type="checkbox" id="tog-economy" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" id="tabFahrt" onclick="switchTab('fahrt')">
+    <span class="tab-icon">🚗</span>Fahrt
+  </button>
+  <button class="tab-btn" id="tabEinstellungen" onclick="switchTab('einstellungen')">
+    <span class="tab-icon">⚙️</span>Einstellungen
+  </button>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  tracking: false,
+  muted: false,
+  watchId: null,
+  intervalId: null,
+  updateIntervalMs: 3 * 60 * 1000,
+  currentPlace: null,
+  lastSpokenPlace: null,
+  speechRate: 0.95,
+  speechPitch: 1.0,
+  selectedVoiceName: null,
+  voiceLang: 'de-DE',
+  visitedPlaces: [],
+  isSpeaking: false,
+};
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function setStatus(state_) {
+  const d = document.getElementById('statusDot');
+  d.className = 'status-dot';
+  if (state_ === 'active') d.classList.add('active');
+  if (state_ === 'error') d.classList.add('error');
+}
+
+function toggleLog() {
+  const b = document.getElementById('logBody');
+  b.classList.toggle('open');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+function setInterval_(minutes) {
+  state.updateIntervalMs = minutes * 60 * 1000;
+  document.querySelectorAll('.interval-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  if (state.tracking) {
+    clearInterval(state.intervalId);
+    if (minutes > 0) {
+      state.intervalId = setInterval(periodicUpdate, state.updateIntervalMs);
+    }
+  }
+  showToast(minutes > 0 ? `Aktualisierung alle ${minutes} min` : 'Nur bei Ortswechsel');
+}
+
+function updateRate(val) {
+  state.speechRate = parseFloat(val);
+  const label = val < 0.8 ? 'langsam' : val > 1.1 ? 'schnell' : 'normal';
+  document.getElementById('rateLabel').textContent = label + ' (' + parseFloat(val).toFixed(2) + ')';
+}
+function updatePitch(val) {
+  state.speechPitch = parseFloat(val);
+  const label = val < 0.8 ? 'tief' : val > 1.1 ? 'hoch' : 'normal';
+  document.getElementById('pitchLabel').textContent = label + ' (' + parseFloat(val).toFixed(1) + ')';
+}
+
+// ---- Voice Picker ----
+// We store the selected voice NAME (not index) so it survives voice list reloads
+function buildVoiceList() {
+  const voices = speechSynthesis.getVoices();
+  const list = document.getElementById('voiceList');
+  if (!list) return;
+
+  if (voices.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:\'DM Mono\',monospace;padding:8px;">Keine Stimmen gefunden.<br>→ Android Einstellungen → Bedienungshilfen → Text-to-Speech → Google TTS aktivieren</div>';
+    return;
+  }
+
+  // Auto-select first German voice if none chosen yet
+  if (!state.selectedVoiceName) {
+    const deVoice = voices.find(v => v.lang.startsWith('de') && v.localService)
+                 || voices.find(v => v.lang.startsWith('de'))
+                 || voices[0];
+    if (deVoice) state.selectedVoiceName = deVoice.name;
+  }
+
+  list.innerHTML = '';
+
+  // Header hint
+  const hint = document.createElement('div');
+  hint.style.cssText = 'font-size:11px;color:var(--muted);font-family:"DM Mono",monospace;margin-bottom:6px;';
+  hint.textContent = `${voices.length} Stimmen verfügbar — tippe auf eine Zeile zum Auswählen:`;
+  list.appendChild(hint);
+
+  voices.forEach((voice) => {
+    const isSelected = voice.name === state.selectedVoiceName;
+
+    const row = document.createElement('div');
+    row.style.cssText = `
+      display:flex; align-items:center; gap:8px; padding:9px 10px;
+      border-radius:3px; cursor:pointer;
+      border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};
+      background:${isSelected ? 'rgba(232,197,71,0.07)' : 'var(--surface)'};
+      margin-bottom:4px;
+    `;
+
+    const typeBadge = voice.localService
+      ? `<span style="font-size:9px;color:var(--accent2);font-family:'DM Mono',monospace;">📱</span>`
+      : `<span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">☁️</span>`;
+
+    row.innerHTML = `
+      <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="font-size:13px;color:${isSelected ? 'var(--accent)' : 'var(--text)'};
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isSelected?'500':'400'};">
+          ${isSelected ? '✓ ' : ''}${voice.name}
+        </div>
+        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;">
+          ${voice.lang} ${typeBadge}
+        </div>
+      </div>
+      <button data-name="${voice.name}"
+        style="background:transparent;border:1px solid var(--border);color:var(--muted);
+        padding:6px 12px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;
+        border-radius:2px;white-space:nowrap;flex-shrink:0;">
+        ▶ Test
+      </button>
+    `;
+
+    // Select on row click (not button)
+    row.addEventListener('click', (e) => {
+      if (e.target.dataset.name || e.target.closest('button')) return;
+      state.selectedVoiceName = voice.name;
+      buildVoiceList();
+      showToast('✓ ' + voice.name);
+    });
+
+    // Preview on button click
+    row.querySelector('button').addEventListener('click', (e) => {
+      e.stopPropagation();
+      previewVoiceByName(voice.name);
+    });
+
+    list.appendChild(row);
+  });
+}
+
+function previewVoiceByName(name) {
+  const voices = speechSynthesis.getVoices();
+  const voice = voices.find(v => v.name === name);
+  if (!voice) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance('Willkommen in Interlaken. Diese Stadt liegt zwischen dem Thuner- und dem Brienzersee im Berner Oberland.');
+  utter.voice = voice;
+  utter.lang = voice.lang;
+  utter.rate = state.speechRate;
+  utter.pitch = state.speechPitch || 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+// Voices load async on mobile — try multiple times
+speechSynthesis.onvoiceschanged = buildVoiceList;
+setTimeout(buildVoiceList, 300);
+setTimeout(buildVoiceList, 1200);
+setTimeout(buildVoiceList, 3000);
+
+// ============================================================
+// SPEECH
+// ============================================================
+function speak(text) {
+  if (state.muted || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = state.speechRate;
+  utter.pitch = state.speechPitch || 1.0;
+
+  const voices = speechSynthesis.getVoices();
+  if (state.selectedVoiceName) {
+    const found = voices.find(v => v.name === state.selectedVoiceName);
+    if (found) { utter.voice = found; utter.lang = found.lang; }
+    else { utter.lang = 'de-DE'; } // Fallback falls Stimme nicht mehr da
+  } else {
+    // Standard: beste verfügbare deutsche Stimme
+    const preferred = voices.find(v => v.lang === 'de-DE' && v.localService)
+                   || voices.find(v => v.lang.startsWith('de') && v.localService)
+                   || voices.find(v => v.lang.startsWith('de'));
+    if (preferred) { utter.voice = preferred; utter.lang = preferred.lang; }
+    else { utter.lang = 'de-DE'; }
+  }
+
+  utter.onstart = () => {
+    state.isSpeaking = true;
+    document.getElementById('speakingIndicator').classList.add('active');
+    document.getElementById('audioStatus').textContent = 'Spreche...';
+  };
+  utter.onend = () => {
+    state.isSpeaking = false;
+    document.getElementById('speakingIndicator').classList.remove('active');
+    document.getElementById('audioStatus').textContent = 'Bereit';
+  };
+  window.speechSynthesis.speak(utter);
+}
+
+function toggleMute() {
+  state.muted = !state.muted;
+  const btn = document.getElementById('muteBtn');
+  if (state.muted) {
+    btn.textContent = '🔇 STUMM';
+    btn.classList.add('muted');
+    window.speechSynthesis.cancel();
+  } else {
+    btn.textContent = '🔊 TON';
+    btn.classList.remove('muted');
+  }
+}
+
+function readAgain() {
+  const text = document.getElementById('infoText').textContent;
+  if (text && !text.includes('Warte')) speak(text);
+}
+
+// ============================================================
+// GEOCODING – place detection
+// ============================================================
+async function getPlaceName(lat, lon) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=de`,
+      { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }
+    );
+    const d = await r.json();
+    return d;
+  } catch(e) {
+    return null;
+  }
+}
+
+function extractPlaceName(nominatim) {
+  const a = nominatim.address;
+  return a.village || a.town || a.city || a.municipality || a.county || 'Unbekannt';
+}
+
+function extractRegion(nominatim) {
+  const a = nominatim.address;
+  const parts = [];
+  if (a.state) parts.push(a.state);
+  if (a.country) parts.push(a.country);
+  return parts.join(', ');
+}
+
+// ============================================================
+// WIKIDATA – structured data
+// ============================================================
+async function getWikidataInfo(placeName) {
+  try {
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(placeName)}&language=de&type=item&format=json&origin=*&limit=1`;
+    const sr = await fetch(searchUrl);
+    const sd = await sr.json();
+    if (!sd.search || sd.search.length === 0) return null;
+
+    const qid = sd.search[0].id;
+    const url = `https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`;
+    const er = await fetch(url);
+    const ed = await er.json();
+    const entity = ed.entities[qid];
+    const claims = entity.claims;
+
+    const get = (prop) => {
+      try { return claims[prop]?.[0]?.mainsnak?.datavalue?.value; } catch { return null; }
+    };
+
+    const pop = get('P1082');
+    const area = get('P2046');
+    const elev = get('P2044');
+
+    return {
+      population: pop?.amount ? Math.round(parseFloat(pop.amount)).toLocaleString('de-CH') : null,
+      area: area?.amount ? Math.round(parseFloat(area.amount)) + ' km²' : null,
+      elevation: elev?.amount ? Math.round(parseFloat(elev.amount)) + ' m' : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================
+// WIKIPEDIA API – beschreibender Text, gefiltert nach Kategorien
+// ============================================================
+async function getClaudeInfo(placeName, region) {
+  const showPop     = document.getElementById('tog-pop')?.checked;
+  const showRegion  = document.getElementById('tog-region')?.checked;
+  const showHistory = document.getElementById('tog-history')?.checked;
+  const showSights  = document.getElementById('tog-sights')?.checked;
+  const showEconomy = document.getElementById('tog-economy')?.checked;
+
+  try {
+    // Suche besten Wikipedia-Artikel auf Deutsch
+    const searchUrl = `https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(placeName + ' Gemeinde Ort')}&srlimit=5&format=json&origin=*`;
+    const sr = await fetch(searchUrl);
+    const sd = await sr.json();
+    if (!sd.query?.search?.length) return await getWikipediaFallback(placeName);
+
+    // Bevorzuge exakten Treffer im Titel
+    let bestMatch = sd.query.search[0];
+    for (const r of sd.query.search) {
+      if (r.title.toLowerCase() === placeName.toLowerCase()) { bestMatch = r; break; }
+    }
+
+    // Hole kompletten Artikel-Text mit Abschnitten
+    const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${bestMatch.pageid}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
+    const er = await fetch(extractUrl);
+    const ed = await er.json();
+    const pages = ed.query?.pages;
+    if (!pages) return null;
+
+    const page = Object.values(pages)[0];
+    const fullText = (page.extract || '').trim();
+    if (!fullText || fullText.length < 50) return await getWikipediaFallback(placeName);
+
+    // Splitte Text in Abschnitte anhand von Zeilenumbrüchen + Grossbuchstaben-Titeln
+    // Wikipedia plaintext format: Abschnittstitel stehen allein auf einer Zeile
+    const lines = fullText.split('\n');
+    const sectionMap = {}; // { sectionTitle: [sentences] }
+    let currentSection = 'intro';
+    sectionMap['intro'] = [];
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      // Kurze Zeile ohne Satzzeichen am Ende = wahrscheinlich Abschnittstitel
+      if (trimmed.length < 60 && !trimmed.match(/[.!?]$/) && trimmed.length > 2) {
+        currentSection = trimmed.toLowerCase();
+        sectionMap[currentSection] = sectionMap[currentSection] || [];
+      } else {
+        const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed];
+        sectionMap[currentSection].push(...sentences);
+      }
+    }
+
+    const parts = [];
+
+    // --- Einleitung / Lage / Einwohner (immer 1-3 Sätze) ---
+    const introSentences = sectionMap['intro'] || [];
+    if (showRegion || showPop) {
+      parts.push(...introSentences.slice(0, 3));
+    } else {
+      // Mindestens 1 Satz damit immer etwas gesagt wird
+      parts.push(introSentences[0] || '');
+    }
+
+    // --- Alle anderen Abschnitte durchsuchen ---
+    for (const [title, sentences] of Object.entries(sectionMap)) {
+      if (title === 'intro') continue;
+      if (!sentences.length) continue;
+
+      // Breite Keyword-Suche für jeden Typ
+      const isHistory = /geschicht|gründ|entsteh|ursprung|herkunft|mittelalter|entwicklung|vergangenheit|früh|namen|besiedlung|röm|kelten|krieg|reforma/.test(title);
+      const isSights  = /sehenswürd|tourismus|kultur|wahrzeichen|museum|schloss|kirch|attraktion|denkmal|freizeit|sport|ausflug|besuchen|sehen/.test(title);
+      const isEconomy = /wirtschaft|industrie|bildung|schule|universität|hochschule|verkehr|infrastruktur|unternehmen|gewerbe|handel|arbeit|beruf|firma/.test(title);
+      // Fallback: wenn Abschnitt keinem Typ zugeordnet werden kann, trotzdem einbeziehen wenn Flags aktiv
+      const isOther   = !isHistory && !isSights && !isEconomy;
+
+      if (showHistory && isHistory)         parts.push(...sentences.slice(0, 2));
+      if (showSights  && isSights)          parts.push(...sentences.slice(0, 2));
+      if (showEconomy && isEconomy)         parts.push(...sentences.slice(0, 2));
+      // Unbekannte Abschnitte: nehme einen Satz wenn mindestens 2 Flags aktiv
+      const activeFlags = [showRegion, showHistory, showSights, showEconomy].filter(Boolean).length;
+      if (isOther && activeFlags >= 2)      parts.push(sentences[0]);
+    }
+
+    // Maximal 6 Sätze, bereinigt
+    const result = parts
+      .map(s => s.trim())
+      .filter(s => s.length > 15)
+      .slice(0, 6)
+      .join(' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+
+    if (result.length < 40) return await getWikipediaFallback(placeName);
+    return result;
+
+  } catch {
+    return await getWikipediaFallback(placeName);
+  }
+}
+
+// Fallback: deutsche Wikipedia ohne Abschnittsfilter
+async function getWikipediaFallback(placeName) {
+  try {
+    const url = `https://de.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const pages = d.query?.pages;
+    if (!pages) return null;
+    const page = Object.values(pages)[0];
+    if (page.extract && page.extract.length > 40) return page.extract.substring(0, 600);
+    // Letzter Ausweg: englische Wikipedia
+    const url2 = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
+    const r2 = await fetch(url2);
+    const d2 = await r2.json();
+    const pages2 = d2.query?.pages;
+    const page2 = Object.values(pages2 || {})[0];
+    return page2?.extract ? page2.extract.substring(0, 500) : null;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================
+// MAIN UPDATE LOGIC
+// ============================================================
+async function updateLocation(lat, lon, force = false) {
+  document.getElementById('coordLat').textContent = `LAT ${lat.toFixed(4)}`;
+  document.getElementById('coordLon').textContent = `LON ${lon.toFixed(4)}`;
+
+  const nominatim = await getPlaceName(lat, lon);
+  if (!nominatim) return;
+
+  const placeName = extractPlaceName(nominatim);
+  const region = extractRegion(nominatim);
+
+  document.getElementById('locationName').textContent = placeName;
+  document.getElementById('locationRegion').textContent = region;
+
+  const isNewPlace = placeName !== state.lastSpokenPlace;
+
+  if (!isNewPlace && !force) return;
+
+  state.lastSpokenPlace = placeName;
+  state.currentPlace = { placeName, region, lat, lon, time: new Date() };
+
+  // Add to log
+  addToLog(placeName, region);
+
+  // Set UI loading
+  document.getElementById('infoText').className = 'info-text loading';
+  document.getElementById('infoText').textContent = `Lade Infos zu ${placeName}...`;
+  document.getElementById('audioStatus').textContent = `Lade ${placeName}...`;
+  document.getElementById('statPop').textContent = '—';
+  document.getElementById('statArea').textContent = '—';
+  document.getElementById('statElev').textContent = '—';
+
+  // Region stat
+  const stateShort = nominatim.address?.state || region.split(',')[0] || '—';
+  document.getElementById('statRegion').textContent = stateShort.length > 10 ? stateShort.substring(0,9)+'…' : stateShort;
+
+  // Wikidata + Wikipedia in parallel
+  const [wikiStats, claudeText] = await Promise.all([
+    getWikidataInfo(placeName),
+    getClaudeInfo(placeName, region)
+  ]);
+
+  // Update stats
+  if (wikiStats) {
+    document.getElementById('statPop').textContent = wikiStats.population || '—';
+    document.getElementById('statArea').textContent = wikiStats.area || '—';
+    document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+  }
+
+  if (claudeText) {
+    document.getElementById('infoText').className = 'info-text';
+    document.getElementById('infoText').textContent = claudeText;
+    speak(claudeText);
+  } else {
+    document.getElementById('infoText').className = 'info-text loading';
+    document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
+  }
+}
+
+function addToLog(place, region) {
+  const now = new Date();
+  const time = now.toTimeString().substring(0,5);
+  state.visitedPlaces.unshift({ place, region, time });
+
+  const logBody = document.getElementById('logBody');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${time}</span><span>${place}</span>`;
+  logBody.insertBefore(entry, logBody.firstChild);
+
+  document.getElementById('logCount').textContent = `${state.visitedPlaces.length} Orte`;
+}
+
+// ============================================================
+// GPS TRACKING
+// ============================================================
+function startTracking() {
+  if (!navigator.geolocation) {
+    showToast('⚠️ GPS nicht verfügbar auf diesem Gerät');
+    return;
+  }
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('active-screen').style.display = 'flex';
+  document.getElementById('tabBar').classList.add('visible');
+  setStatus('active');
+  state.tracking = true;
+
+  showToast('GPS aktiviert – fahre los!');
+
+  state.watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      updateLocation(lat, lon);
+    },
+    (err) => {
+      setStatus('error');
+      showToast('⚠️ GPS-Fehler: ' + err.message);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+  );
+
+  // Periodic force-update
+  if (state.updateIntervalMs > 0) {
+    state.intervalId = setInterval(periodicUpdate, state.updateIntervalMs);
+  }
+}
+
+function periodicUpdate() {
+  if (!state.tracking) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude, true),
+    () => {}
+  );
+}
+
+function forceUpdate() {
+  if (!state.tracking) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude, true),
+    () => showToast('GPS-Signal nicht verfügbar')
+  );
+}
+
+function stopTracking() {
+  if (state.watchId !== null) navigator.geolocation.clearWatch(state.watchId);
+  if (state.intervalId !== null) clearInterval(state.intervalId);
+  window.speechSynthesis.cancel();
+
+  state.tracking = false;
+  state.watchId = null;
+  state.intervalId = null;
+  state.lastSpokenPlace = null;
+
+  document.getElementById('active-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  document.getElementById('tabBar').classList.remove('visible');
+  setStatus('');
+  showToast('Fahrt beendet. Gute Reise!');
+}
+
+// ============================================================
+// DEMO MODE
+// ============================================================
+const demoPlaces = [
+  { name: 'Bern', region: 'Kanton Bern, Schweiz', lat: 46.9481, lon: 7.4474 },
+  { name: 'Thun', region: 'Kanton Bern, Schweiz', lat: 46.7583, lon: 7.6279 },
+  { name: 'Interlaken', region: 'Kanton Bern, Schweiz', lat: 46.6863, lon: 7.8632 },
+];
+
+let demoIndex = 0;
+
+async function showDemo() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('active-screen').style.display = 'flex';
+  document.getElementById('tabBar').classList.add('visible');
+  setStatus('active');
+  state.tracking = true;
+
+  showToast('Demo-Modus: Bern → Interlaken');
+
+  const runDemo = async () => {
+    if (demoIndex >= demoPlaces.length) {
+      stopTracking();
+      return;
+    }
+    const p = demoPlaces[demoIndex++];
+    document.getElementById('coordLat').textContent = `LAT ${p.lat.toFixed(4)}`;
+    document.getElementById('coordLon').textContent = `LON ${p.lon.toFixed(4)}`;
+    document.getElementById('locationName').textContent = p.name;
+    document.getElementById('locationRegion').textContent = p.region;
+    addToLog(p.name, p.region);
+    document.getElementById('infoText').className = 'info-text loading';
+    document.getElementById('infoText').textContent = `Lade Infos zu ${p.name}...`;
+
+    const [wikiStats, claudeText] = await Promise.all([
+      getWikidataInfo(p.name),
+      getClaudeInfo(p.name, p.region)
+    ]);
+
+    if (wikiStats) {
+      document.getElementById('statPop').textContent = wikiStats.population || '—';
+      document.getElementById('statArea').textContent = wikiStats.area || '—';
+      document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+    }
+    const shortRegion = p.region.split(',')[0];
+    document.getElementById('statRegion').textContent = shortRegion.length > 10 ? shortRegion.substring(0,9)+'…' : shortRegion;
+
+    if (claudeText) {
+      document.getElementById('infoText').className = 'info-text';
+      document.getElementById('infoText').textContent = claudeText;
+      speak(claudeText);
+    }
+
+    if (demoIndex < demoPlaces.length) {
+      setTimeout(runDemo, 18000); // next demo after 18s
+    }
+  };
+
+  runDemo();
+}
+</script>
+</body>
+</html>
