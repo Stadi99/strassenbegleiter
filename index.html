@@ -1039,7 +1039,9 @@ async function getPlaceName(lat, lon) {
 
 function extractPlaceName(nominatim) {
   const a = nominatim.address;
-  return a.village || a.town || a.city || a.municipality || a.county || 'Unbekannt';
+  // Gemeinde/Stadt hat Vorrang vor Ortsteil/Weiler
+  // village/hamlet sind oft nur Ortsteile einer grösseren Gemeinde
+  return a.municipality || a.city || a.town || a.village || a.hamlet || a.suburb || a.county || 'Unbekannt';
 }
 
 function extractRegion(nominatim) {
