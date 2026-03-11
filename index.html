@@ -1027,7 +1027,7 @@ function readAgain() {
 async function getPlaceName(lat, lon) {
   try {
     const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=de`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=10&accept-language=de`,
       { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }
     );
     const d = await r.json();
@@ -1038,10 +1038,11 @@ async function getPlaceName(lat, lon) {
 }
 
 function extractPlaceName(nominatim) {
+  // Bei zoom=10 gibt Nominatim die Gemeinde direkt als "name" zurück
+  if (nominatim.name) return nominatim.name;
+  // Fallback auf Adressfelder – Gemeinde vor Ortsteil
   const a = nominatim.address;
-  // Gemeinde/Stadt hat Vorrang vor Ortsteil/Weiler
-  // village/hamlet sind oft nur Ortsteile einer grösseren Gemeinde
-  return a.municipality || a.city || a.town || a.village || a.hamlet || a.suburb || a.county || 'Unbekannt';
+  return a.municipality || a.city || a.town || a.village || a.hamlet || a.county || 'Unbekannt';
 }
 
 function extractRegion(nominatim) {
