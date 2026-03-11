@@ -796,6 +796,62 @@
 
 <script>
 // ============================================================
+// EINSTELLUNGEN SPEICHERN / LADEN (localStorage)
+// ============================================================
+function saveSettings() {
+  const settings = {
+    speechRate:        state.speechRate,
+    speechPitch:       state.speechPitch,
+    selectedVoiceName: state.selectedVoiceName,
+    updateIntervalMs:  state.updateIntervalMs,
+    togPop:     document.getElementById('tog-pop')?.checked,
+    togRegion:  document.getElementById('tog-region')?.checked,
+    togHistory: document.getElementById('tog-history')?.checked,
+    togSights:  document.getElementById('tog-sights')?.checked,
+    togEconomy: document.getElementById('tog-economy')?.checked,
+  };
+  try { localStorage.setItem('strassenbegleiter_settings', JSON.stringify(settings)); } catch(e) {}
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('strassenbegleiter_settings');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+
+    if (s.speechRate != null) {
+      state.speechRate = s.speechRate;
+      const el = document.getElementById('speechRate');
+      if (el) el.value = s.speechRate;
+      updateRate(s.speechRate);
+    }
+    if (s.speechPitch != null) {
+      state.speechPitch = s.speechPitch;
+      const el = document.getElementById('speechPitch');
+      if (el) el.value = s.speechPitch;
+      updatePitch(s.speechPitch);
+    }
+    if (s.selectedVoiceName) {
+      state.selectedVoiceName = s.selectedVoiceName;
+    }
+    if (s.updateIntervalMs != null) {
+      state.updateIntervalMs = s.updateIntervalMs;
+      // Markiere richtigen Intervall-Button
+      const minutes = s.updateIntervalMs / 60000;
+      document.querySelectorAll('.interval-btn').forEach(b => {
+        b.classList.toggle('selected', b.textContent.trim() === (minutes > 0 ? minutes + ' min' : 'Nur Ort'));
+      });
+    }
+    if (s.togPop     != null) { const el = document.getElementById('tog-pop');     if(el) el.checked = s.togPop; }
+    if (s.togRegion  != null) { const el = document.getElementById('tog-region');  if(el) el.checked = s.togRegion; }
+    if (s.togHistory != null) { const el = document.getElementById('tog-history'); if(el) el.checked = s.togHistory; }
+    if (s.togSights  != null) { const el = document.getElementById('tog-sights');  if(el) el.checked = s.togSights; }
+    if (s.togEconomy != null) { const el = document.getElementById('tog-economy'); if(el) el.checked = s.togEconomy; }
+  } catch(e) {}
+}
+
+// Einstellungen nach jeder Änderung automatisch speichern
+// ============================================================
 // STATE
 // ============================================================
 const state = {
@@ -853,6 +909,7 @@ function setInterval_(minutes) {
       state.intervalId = setInterval(periodicUpdate, state.updateIntervalMs);
     }
   }
+  saveSettings();
   showToast(minutes > 0 ? `Aktualisierung alle ${minutes} min` : 'Nur bei Ortswechsel');
 }
 
@@ -860,11 +917,13 @@ function updateRate(val) {
   state.speechRate = parseFloat(val);
   const label = val < 0.8 ? 'langsam' : val > 1.1 ? 'schnell' : 'normal';
   document.getElementById('rateLabel').textContent = label + ' (' + parseFloat(val).toFixed(2) + ')';
+  saveSettings();
 }
 function updatePitch(val) {
   state.speechPitch = parseFloat(val);
   const label = val < 0.8 ? 'tief' : val > 1.1 ? 'hoch' : 'normal';
   document.getElementById('pitchLabel').textContent = label + ' (' + parseFloat(val).toFixed(1) + ')';
+  saveSettings();
 }
 
 // ---- Voice Picker ----
@@ -934,6 +993,7 @@ function buildVoiceList() {
       if (e.target.dataset.name || e.target.closest('button')) return;
       state.selectedVoiceName = voice.name;
       buildVoiceList();
+      saveSettings();
       showToast('✓ ' + voice.name);
     });
 
@@ -965,6 +1025,15 @@ speechSynthesis.onvoiceschanged = buildVoiceList;
 setTimeout(buildVoiceList, 300);
 setTimeout(buildVoiceList, 1200);
 setTimeout(buildVoiceList, 3000);
+
+// Einstellungen laden sobald Seite bereit
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  // Toggles: bei jeder Änderung speichern
+  ['tog-pop','tog-region','tog-history','tog-sights','tog-economy'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', saveSettings);
+  });
+});
 
 // ============================================================
 // SPEECH
