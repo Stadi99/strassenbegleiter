@@ -1087,8 +1087,9 @@ async function getWikidataInfo(placeName) {
 
 // ============================================================
 // WIKIPEDIA API – beschreibender Text, gefiltert nach Kategorien
+// Sucht per GPS-Koordinaten – findet immer den richtigen Ort
 // ============================================================
-async function getClaudeInfo(placeName, region) {
+async function getClaudeInfo(placeName, region, lat, lon) {
   const showPop     = document.getElementById('tog-pop')?.checked;
   const showRegion  = document.getElementById('tog-region')?.checked;
   const showHistory = document.getElementById('tog-history')?.checked;
@@ -1096,20 +1097,44 @@ async function getClaudeInfo(placeName, region) {
   const showEconomy = document.getElementById('tog-economy')?.checked;
 
   try {
-    // Suche besten Wikipedia-Artikel auf Deutsch
-    const searchUrl = `https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(placeName + ' Gemeinde Ort')}&srlimit=5&format=json&origin=*`;
-    const sr = await fetch(searchUrl);
-    const sd = await sr.json();
-    if (!sd.query?.search?.length) return await getWikipediaFallback(placeName);
+    // 1. Koordinaten-basierte Suche – findet Artikel in der Nähe des GPS-Standorts
+    //    gsradius=10000 = 10km Umkreis, gslimit=5 = max 5 Treffer
+    const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=5&format=json&origin=*`;
+    const gr = await fetch(geoUrl);
+    const gd = await gr.json();
+    const geoResults = gd.query?.geosearch || [];
 
-    // Bevorzuge exakten Treffer im Titel
-    let bestMatch = sd.query.search[0];
-    for (const r of sd.query.search) {
-      if (r.title.toLowerCase() === placeName.toLowerCase()) { bestMatch = r; break; }
+    let pageId = null;
+
+    if (geoResults.length > 0) {
+      // Bevorzuge Artikel dessen Titel dem Ortsnamen ähnelt
+      const exact = geoResults.find(r =>
+        r.title.toLowerCase() === placeName.toLowerCase() ||
+        r.title.toLowerCase().includes(placeName.toLowerCase()) ||
+        placeName.toLowerCase().includes(r.title.toLowerCase())
+      );
+      const best = exact || geoResults[0];
+      pageId = best.pageid;
     }
 
-    // Hole kompletten Artikel-Text mit Abschnitten
-    const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${bestMatch.pageid}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
+    // 2. Fallback: Namenssuche mit Länderhinweis aus Region
+    if (!pageId) {
+      const country = region.includes('Schweiz') ? 'Schweiz' :
+                      region.includes('Deutschland') ? 'Deutschland' :
+                      region.includes('Österreich') ? 'Österreich' : '';
+      const searchUrl = `https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(placeName + ' ' + country)}&srlimit=5&format=json&origin=*`;
+      const sr = await fetch(searchUrl);
+      const sd = await sr.json();
+      const results = sd.query?.search || [];
+      const exact2 = results.find(r => r.title.toLowerCase() === placeName.toLowerCase());
+      const best2 = exact2 || results[0];
+      if (best2) pageId = best2.pageid;
+    }
+
+    if (!pageId) return await getWikipediaFallback(placeName, lat, lon);
+
+    // 3. Hole kompletten Artikel-Text
+    const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${pageId}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
     const er = await fetch(extractUrl);
     const ed = await er.json();
     const pages = ed.query?.pages;
@@ -1117,19 +1142,17 @@ async function getClaudeInfo(placeName, region) {
 
     const page = Object.values(pages)[0];
     const fullText = (page.extract || '').trim();
-    if (!fullText || fullText.length < 50) return await getWikipediaFallback(placeName);
+    if (!fullText || fullText.length < 50) return await getWikipediaFallback(placeName, lat, lon);
 
-    // Splitte Text in Abschnitte anhand von Zeilenumbrüchen + Grossbuchstaben-Titeln
-    // Wikipedia plaintext format: Abschnittstitel stehen allein auf einer Zeile
+    // 4. Splitte Text in Abschnitte
     const lines = fullText.split('\n');
-    const sectionMap = {}; // { sectionTitle: [sentences] }
+    const sectionMap = {};
     let currentSection = 'intro';
     sectionMap['intro'] = [];
 
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
-      // Kurze Zeile ohne Satzzeichen am Ende = wahrscheinlich Abschnittstitel
       if (trimmed.length < 60 && !trimmed.match(/[.!?]$/) && trimmed.length > 2) {
         currentSection = trimmed.toLowerCase();
         sectionMap[currentSection] = sectionMap[currentSection] || [];
@@ -1140,37 +1163,28 @@ async function getClaudeInfo(placeName, region) {
     }
 
     const parts = [];
-
-    // --- Einleitung / Lage / Einwohner (immer 1-3 Sätze) ---
     const introSentences = sectionMap['intro'] || [];
+
     if (showRegion || showPop) {
       parts.push(...introSentences.slice(0, 3));
     } else {
-      // Mindestens 1 Satz damit immer etwas gesagt wird
       parts.push(introSentences[0] || '');
     }
 
-    // --- Alle anderen Abschnitte durchsuchen ---
     for (const [title, sentences] of Object.entries(sectionMap)) {
-      if (title === 'intro') continue;
-      if (!sentences.length) continue;
-
-      // Breite Keyword-Suche für jeden Typ
+      if (title === 'intro' || !sentences.length) continue;
       const isHistory = /geschicht|gründ|entsteh|ursprung|herkunft|mittelalter|entwicklung|vergangenheit|früh|namen|besiedlung|röm|kelten|krieg|reforma/.test(title);
       const isSights  = /sehenswürd|tourismus|kultur|wahrzeichen|museum|schloss|kirch|attraktion|denkmal|freizeit|sport|ausflug|besuchen|sehen/.test(title);
       const isEconomy = /wirtschaft|industrie|bildung|schule|universität|hochschule|verkehr|infrastruktur|unternehmen|gewerbe|handel|arbeit|beruf|firma/.test(title);
-      // Fallback: wenn Abschnitt keinem Typ zugeordnet werden kann, trotzdem einbeziehen wenn Flags aktiv
       const isOther   = !isHistory && !isSights && !isEconomy;
-
-      if (showHistory && isHistory)         parts.push(...sentences.slice(0, 2));
-      if (showSights  && isSights)          parts.push(...sentences.slice(0, 2));
-      if (showEconomy && isEconomy)         parts.push(...sentences.slice(0, 2));
-      // Unbekannte Abschnitte: nehme einen Satz wenn mindestens 2 Flags aktiv
       const activeFlags = [showRegion, showHistory, showSights, showEconomy].filter(Boolean).length;
-      if (isOther && activeFlags >= 2)      parts.push(sentences[0]);
+
+      if (showHistory && isHistory)       parts.push(...sentences.slice(0, 2));
+      if (showSights  && isSights)        parts.push(...sentences.slice(0, 2));
+      if (showEconomy && isEconomy)       parts.push(...sentences.slice(0, 2));
+      if (isOther && activeFlags >= 2)    parts.push(sentences[0]);
     }
 
-    // Maximal 6 Sätze, bereinigt
     const result = parts
       .map(s => s.trim())
       .filter(s => s.length > 15)
@@ -1179,31 +1193,37 @@ async function getClaudeInfo(placeName, region) {
       .replace(/\s{2,}/g, ' ')
       .trim();
 
-    if (result.length < 40) return await getWikipediaFallback(placeName);
+    if (result.length < 40) return await getWikipediaFallback(placeName, lat, lon);
     return result;
 
   } catch {
-    return await getWikipediaFallback(placeName);
+    return await getWikipediaFallback(placeName, lat, lon);
   }
 }
 
-// Fallback: deutsche Wikipedia ohne Abschnittsfilter
-async function getWikipediaFallback(placeName) {
+// Fallback: Geosearch ohne Namensfilter
+async function getWikipediaFallback(placeName, lat, lon) {
   try {
-    const url = `https://de.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`;
+    // Versuche nochmals nur mit Koordinaten, nimm ersten Treffer
+    if (lat && lon) {
+      const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=5000&gslimit=1&format=json&origin=*`;
+      const gr = await fetch(geoUrl);
+      const gd = await gr.json();
+      const hit = gd.query?.geosearch?.[0];
+      if (hit) {
+        const url = `https://de.wikipedia.org/w/api.php?action=query&pageids=${hit.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`;
+        const r = await fetch(url);
+        const d = await r.json();
+        const page = Object.values(d.query?.pages || {})[0];
+        if (page?.extract?.length > 40) return page.extract.substring(0, 600);
+      }
+    }
+    // Letzter Ausweg: einfache Namenssuche
+    const url = `https://de.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
     const r = await fetch(url);
     const d = await r.json();
-    const pages = d.query?.pages;
-    if (!pages) return null;
-    const page = Object.values(pages)[0];
-    if (page.extract && page.extract.length > 40) return page.extract.substring(0, 600);
-    // Letzter Ausweg: englische Wikipedia
-    const url2 = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
-    const r2 = await fetch(url2);
-    const d2 = await r2.json();
-    const pages2 = d2.query?.pages;
-    const page2 = Object.values(pages2 || {})[0];
-    return page2?.extract ? page2.extract.substring(0, 500) : null;
+    const page = Object.values(d.query?.pages || {})[0];
+    return page?.extract?.length > 40 ? page.extract.substring(0, 600) : null;
   } catch {
     return null;
   }
@@ -1250,7 +1270,7 @@ async function updateLocation(lat, lon, force = false) {
   // Wikidata + Wikipedia in parallel
   const [wikiStats, claudeText] = await Promise.all([
     getWikidataInfo(placeName),
-    getClaudeInfo(placeName, region)
+    getClaudeInfo(placeName, region, lat, lon)
   ]);
 
   // Update stats
@@ -1388,7 +1408,7 @@ async function showDemo() {
 
     const [wikiStats, claudeText] = await Promise.all([
       getWikidataInfo(p.name),
-      getClaudeInfo(p.name, p.region)
+      getClaudeInfo(p.name, p.region, p.lat, p.lon)
     ]);
 
     if (wikiStats) {
