@@ -7,15 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --card: #1a1a26;
-    --border: #2a2a3f;
-    --accent: #e8c547;
-    --accent2: #4fc3a1;
-    --text: #e8e8f0;
-    --muted: #6b6b88;
-    --danger: #e85447;
+    --bg: #f0f2f5;
+    --surface: #e4e7ec;
+    --card: #ffffff;
+    --border: #d0d5dd;
+    --accent: #1a6ef5;
+    --accent2: #0e9f6e;
+    --text: #111827;
+    --muted: #6b7280;
+    --danger: #dc2626;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,8 +36,8 @@
     position: fixed;
     inset: 0;
     background-image:
-      linear-gradient(rgba(232,197,71,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(232,197,71,0.03) 1px, transparent 1px);
+      linear-gradient(rgba(26,110,245,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,110,245,0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
@@ -57,14 +57,14 @@
 
   /* Header */
   header {
-    padding: 24px 20px 16px;
+    padding: 20px 20px 14px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
-    background: rgba(10,10,15,0.92);
+    background: rgba(240,242,245,0.95);
     backdrop-filter: blur(12px);
     z-index: 10;
   }
@@ -78,12 +78,12 @@
   }
 
   .logo span {
-    color: var(--text);
-    font-size: 13px;
+    color: var(--muted);
+    font-size: 11px;
     display: block;
     letter-spacing: 4px;
     font-family: 'DM Mono', monospace;
-    font-weight: 300;
+    font-weight: 400;
     margin-top: 2px;
   }
 
@@ -91,7 +91,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--muted);
+    background: var(--border);
     transition: background 0.3s;
     box-shadow: 0 0 0 0 transparent;
   }
@@ -102,9 +102,9 @@
   .status-dot.error { background: var(--danger); }
 
   @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(79,195,161,0.4); }
-    70% { box-shadow: 0 0 0 8px rgba(79,195,161,0); }
-    100% { box-shadow: 0 0 0 0 rgba(79,195,161,0); }
+    0% { box-shadow: 0 0 0 0 rgba(14,159,110,0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(14,159,110,0); }
+    100% { box-shadow: 0 0 0 0 rgba(14,159,110,0); }
   }
 
   /* Main content */
@@ -124,7 +124,7 @@
     justify-content: center;
     min-height: 60vh;
     text-align: center;
-    gap: 32px;
+    gap: 28px;
   }
 
   .hero-icon {
@@ -136,8 +136,9 @@
     align-items: center;
     justify-content: center;
     font-size: 36px;
-    color: var(--accent);
     position: relative;
+    background: white;
+    box-shadow: 0 4px 20px rgba(26,110,245,0.15);
   }
 
   .hero-icon::before {
@@ -145,7 +146,7 @@
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    border: 1px solid rgba(232,197,71,0.2);
+    border: 1px solid rgba(26,110,245,0.2);
   }
 
   .start-text h2 {
@@ -153,6 +154,7 @@
     font-size: 32px;
     letter-spacing: 2px;
     margin-bottom: 8px;
+    color: var(--text);
   }
 
   .start-text p {
@@ -166,25 +168,26 @@
   /* Buttons */
   .btn-primary {
     background: var(--accent);
-    color: #0a0a0f;
+    color: #ffffff;
     border: none;
     padding: 16px 40px;
     font-family: 'Bebas Neue', sans-serif;
     font-size: 20px;
     letter-spacing: 3px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 8px;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     gap: 10px;
+    box-shadow: 0 4px 12px rgba(26,110,245,0.3);
   }
 
-  .btn-primary:hover { background: #f0d060; transform: translateY(-1px); }
+  .btn-primary:hover { background: #1558d0; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,110,245,0.4); }
   .btn-primary:active { transform: translateY(0); }
 
   .btn-secondary {
-    background: transparent;
+    background: white;
     color: var(--muted);
     border: 1px solid var(--border);
     padding: 10px 20px;
@@ -192,13 +195,13 @@
     font-size: 12px;
     letter-spacing: 1px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 6px;
     transition: all 0.2s;
   }
   .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
   .btn-stop {
-    background: transparent;
+    background: white;
     color: var(--danger);
     border: 1px solid var(--danger);
     padding: 10px 24px;
@@ -206,10 +209,10 @@
     font-size: 16px;
     letter-spacing: 2px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 6px;
     transition: all 0.2s;
   }
-  .btn-stop:hover { background: rgba(232,84,71,0.1); }
+  .btn-stop:hover { background: rgba(220,38,38,0.05); }
 
   /* Active screen */
   #active-screen { display: none; flex-direction: column; gap: 16px; }
@@ -218,17 +221,18 @@
   .location-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 10px;
     padding: 20px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .location-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
+    height: 3px;
     background: linear-gradient(90deg, var(--accent), var(--accent2));
   }
 
@@ -272,10 +276,11 @@
   .info-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 10px;
     padding: 20px;
     min-height: 120px;
     position: relative;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .info-card-header {
@@ -297,7 +302,7 @@
     font-size: 14px;
     line-height: 1.7;
     color: var(--text);
-    font-weight: 300;
+    font-weight: 400;
   }
 
   .info-text.loading {
@@ -315,8 +320,9 @@
   .stat-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 10px;
     padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .stat-label {
@@ -342,11 +348,12 @@
   .audio-bar {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 10px;
     padding: 16px 20px;
     display: flex;
     align-items: center;
     gap: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .speaking-indicator {
@@ -384,14 +391,14 @@
   }
 
   .mute-btn {
-    background: transparent;
+    background: white;
     border: 1px solid var(--border);
     color: var(--muted);
     padding: 6px 12px;
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 6px;
     transition: all 0.2s;
   }
   .mute-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -407,10 +414,11 @@
 
   /* Log */
   .log-card {
-    background: var(--surface);
+    background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 10px;
     overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .log-header {
@@ -425,6 +433,7 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    background: var(--surface);
   }
 
   .log-body {
@@ -440,8 +449,8 @@
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     color: var(--muted);
-    padding: 3px 0;
-    border-bottom: 1px solid rgba(42,42,63,0.5);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
     display: flex;
     gap: 10px;
   }
@@ -495,22 +504,20 @@
     height: 18px;
     left: 3px;
     top: 3px;
-    background: var(--muted);
+    background: white;
     border-radius: 50%;
     transition: 0.3s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
 
-  .toggle input:checked + .toggle-slider { background: rgba(232,197,71,0.3); }
-  .toggle input:checked + .toggle-slider::before {
-    transform: translateX(20px);
-    background: var(--accent);
-  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
 
   /* Range input */
   input[type=range] {
     -webkit-appearance: none;
     width: 100px;
-    height: 2px;
+    height: 3px;
     background: var(--border);
     border-radius: 2px;
     outline: none;
@@ -518,12 +525,47 @@
 
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     background: var(--accent);
     border-radius: 50%;
     cursor: pointer;
+    box-shadow: 0 1px 4px rgba(26,110,245,0.3);
   }
+
+  /* Voice dropdown */
+  .voice-select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .voice-select:focus { border-color: var(--accent); }
+
+  .voice-preview-btn {
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .voice-preview-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Notification */
   .toast {
@@ -531,11 +573,10 @@
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(80px);
-    background: var(--card);
-    border: 1px solid var(--accent);
-    color: var(--text);
+    background: var(--text);
+    color: white;
     padding: 12px 20px;
-    border-radius: 4px;
+    border-radius: 8px;
     font-size: 13px;
     font-family: 'DM Mono', monospace;
     transition: transform 0.3s;
@@ -543,6 +584,7 @@
     white-space: nowrap;
     max-width: 90vw;
     text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -554,11 +596,12 @@
     transform: translateX(-50%);
     width: 100%;
     max-width: 480px;
-    background: rgba(18,18,26,0.95);
+    background: rgba(255,255,255,0.95);
     backdrop-filter: blur(12px);
     border-top: 1px solid var(--border);
     display: none;
     z-index: 20;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
   }
   .tab-bar.visible { display: flex; }
 
@@ -601,18 +644,18 @@
   }
 
   .interval-btn {
-    background: var(--card);
+    background: var(--surface);
     border: 1px solid var(--border);
     color: var(--muted);
     padding: 10px;
     font-family: 'DM Mono', monospace;
     font-size: 12px;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 6px;
     transition: all 0.2s;
     text-align: center;
   }
-  .interval-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(232,197,71,0.05); }
+  .interval-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(26,110,245,0.06); }
 </style>
 </head>
 <body>
@@ -733,10 +776,11 @@
         <div class="info-card">
           <div class="info-title" style="margin-bottom:14px;">🗣 Sprachausgabe</div>
           <div style="margin-bottom:12px;">
-            <div class="settings-sub" style="margin-bottom:8px;">STIMME WÄHLEN</div>
-            <div id="voiceList" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;">
-              <div style="color:var(--muted);font-size:12px;font-family:'DM Mono',monospace;">Lade Stimmen...</div>
-            </div>
+            <div class="settings-sub" style="margin-bottom:6px;">STIMME</div>
+            <select id="voiceDropdown" class="voice-select" onchange="selectVoiceFromDropdown()">
+              <option value="">Lade Stimmen...</option>
+            </select>
+            <button class="voice-preview-btn" onclick="previewSelectedVoice()">▶ Stimme testen</button>
           </div>
           <div class="settings-row" style="border-top:1px solid var(--border);padding-top:14px;">
             <div>
@@ -927,90 +971,62 @@ function updatePitch(val) {
   saveSettings();
 }
 
-// ---- Voice Picker ----
-// We store the selected voice NAME (not index) so it survives voice list reloads
+// ---- Voice Dropdown ----
 function buildVoiceList() {
   const voices = speechSynthesis.getVoices();
-  const list = document.getElementById('voiceList');
-  if (!list) return;
+  const select = document.getElementById('voiceDropdown');
+  if (!select || voices.length === 0) return;
 
-  if (voices.length === 0) {
-    list.innerHTML = '<div style="color:var(--muted);font-size:12px;font-family:\'DM Mono\',monospace;padding:8px;">Keine Stimmen gefunden.<br>→ Android Einstellungen → Bedienungshilfen → Text-to-Speech → Google TTS aktivieren</div>';
-    return;
+  const de = voices.filter(v => v.lang.startsWith('de'));
+  const others = voices.filter(v => !v.lang.startsWith('de'));
+
+  select.innerHTML = '';
+
+  if (de.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = '🇩🇪 Deutsch';
+    de.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = v.name + (v.localService ? '' : ' ☁️');
+      if (v.name === state.selectedVoiceName) opt.selected = true;
+      grp.appendChild(opt);
+    });
+    select.appendChild(grp);
+  }
+
+  if (others.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = 'Andere';
+    others.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = v.name + ' (' + v.lang + ')';
+      if (v.name === state.selectedVoiceName) opt.selected = true;
+      grp.appendChild(opt);
+    });
+    select.appendChild(grp);
   }
 
   // Auto-select first German voice if none chosen yet
   if (!state.selectedVoiceName) {
-    const deVoice = voices.find(v => v.lang.startsWith('de') && v.localService)
-                 || voices.find(v => v.lang.startsWith('de'))
-                 || voices[0];
-    if (deVoice) state.selectedVoiceName = deVoice.name;
+    const best = de.find(v => v.localService) || de[0] || voices[0];
+    if (best) { state.selectedVoiceName = best.name; select.value = best.name; }
+  } else {
+    select.value = state.selectedVoiceName;
   }
-
-  list.innerHTML = '';
-
-  // Header hint
-  const hint = document.createElement('div');
-  hint.style.cssText = 'font-size:11px;color:var(--muted);font-family:"DM Mono",monospace;margin-bottom:6px;';
-  hint.textContent = `${voices.length} Stimmen verfügbar — tippe auf eine Zeile zum Auswählen:`;
-  list.appendChild(hint);
-
-  voices.forEach((voice) => {
-    const isSelected = voice.name === state.selectedVoiceName;
-
-    const row = document.createElement('div');
-    row.style.cssText = `
-      display:flex; align-items:center; gap:8px; padding:9px 10px;
-      border-radius:3px; cursor:pointer;
-      border:1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'};
-      background:${isSelected ? 'rgba(232,197,71,0.07)' : 'var(--surface)'};
-      margin-bottom:4px;
-    `;
-
-    const typeBadge = voice.localService
-      ? `<span style="font-size:9px;color:var(--accent2);font-family:'DM Mono',monospace;">📱</span>`
-      : `<span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">☁️</span>`;
-
-    row.innerHTML = `
-      <div style="flex:1;min-width:0;overflow:hidden;">
-        <div style="font-size:13px;color:${isSelected ? 'var(--accent)' : 'var(--text)'};
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isSelected?'500':'400'};">
-          ${isSelected ? '✓ ' : ''}${voice.name}
-        </div>
-        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;">
-          ${voice.lang} ${typeBadge}
-        </div>
-      </div>
-      <button data-name="${voice.name}"
-        style="background:transparent;border:1px solid var(--border);color:var(--muted);
-        padding:6px 12px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;
-        border-radius:2px;white-space:nowrap;flex-shrink:0;">
-        ▶ Test
-      </button>
-    `;
-
-    // Select on row click (not button)
-    row.addEventListener('click', (e) => {
-      if (e.target.dataset.name || e.target.closest('button')) return;
-      state.selectedVoiceName = voice.name;
-      buildVoiceList();
-      saveSettings();
-      showToast('✓ ' + voice.name);
-    });
-
-    // Preview on button click
-    row.querySelector('button').addEventListener('click', (e) => {
-      e.stopPropagation();
-      previewVoiceByName(voice.name);
-    });
-
-    list.appendChild(row);
-  });
 }
 
-function previewVoiceByName(name) {
+function selectVoiceFromDropdown() {
+  const select = document.getElementById('voiceDropdown');
+  state.selectedVoiceName = select.value;
+  saveSettings();
+  showToast('✓ ' + select.value);
+}
+
+function previewSelectedVoice() {
   const voices = speechSynthesis.getVoices();
-  const voice = voices.find(v => v.name === name);
+  const voice = voices.find(v => v.name === state.selectedVoiceName);
   if (!voice) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance('Willkommen in Interlaken. Diese Stadt liegt zwischen dem Thuner- und dem Brienzersee im Berner Oberland.');
