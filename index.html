@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.3</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.4</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -848,6 +848,7 @@ function saveSettings() {
     speechRate:        state.speechRate,
     speechPitch:       state.speechPitch,
     selectedVoiceName: state.selectedVoiceName,
+    voiceLang: state.voiceLang,
     updateIntervalMs:  state.updateIntervalMs,
     togPop:     document.getElementById('tog-pop')?.checked,
     togRegion:  document.getElementById('tog-region')?.checked,
@@ -878,6 +879,9 @@ function loadSettings() {
     }
     if (s.selectedVoiceName) {
       state.selectedVoiceName = s.selectedVoiceName;
+    }
+    if (s.voiceLang) {
+      state.voiceLang = s.voiceLang;
     }
     if (s.updateIntervalMs != null) {
       state.updateIntervalMs = s.updateIntervalMs;
@@ -1020,6 +1024,9 @@ function buildVoiceList() {
 function selectVoiceFromDropdown() {
   const select = document.getElementById('voiceDropdown');
   state.selectedVoiceName = select.value;
+  const voices = speechSynthesis.getVoices();
+  const voice = voices.find(v => v.name === select.value);
+  if (voice) state.voiceLang = voice.lang;
   saveSettings();
   showToast('✓ ' + select.value);
 }
@@ -1146,7 +1153,7 @@ function readAgain() {
 async function getPlaceName(lat, lon) {
   try {
     const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=10&accept-language=de`,
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=10&accept-language=${(state.voiceLang||'de-DE').split('-')[0]}`,
       { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }
     );
     const d = await r.json();
@@ -1229,9 +1236,10 @@ async function getClaudeInfo(placeName, region, lat, lon) {
   const showEconomy = document.getElementById('tog-economy')?.checked;
 
   // 1. Wikipedia-Kontext holen (koordinatenbasiert)
+  const wikiLang = (state.voiceLang || 'de-DE').split('-')[0];
   let wikiContext = '';
   try {
-    const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=3&format=json&origin=*`;
+    const geoUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=3&format=json&origin=*`;
     const gr = await fetch(geoUrl);
     const gd = await gr.json();
     const geoResults = gd.query?.geosearch || [];
@@ -1241,7 +1249,7 @@ async function getClaudeInfo(placeName, region, lat, lon) {
     ) || geoResults[0];
 
     if (best) {
-      const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${best.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=8&format=json&origin=*`;
+      const extractUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&pageids=${best.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=8&format=json&origin=*`;
       const er = await fetch(extractUrl);
       const ed = await er.json();
       const page = Object.values(ed.query?.pages || {})[0];
@@ -1258,17 +1266,27 @@ async function getClaudeInfo(placeName, region, lat, lon) {
   if (showEconomy) cats.push('Wirtschaft und Bildung');
   if (cats.length === 0) cats.push('allgemeine Informationen');
 
+  const langCode = (state.voiceLang || 'de-DE').split('-')[0];
+  const langNames = { de: 'Deutsch', en: 'English', fr: 'français', it: 'italiano', es: 'español', nl: 'Nederlands', pt: 'português', pl: 'polski' };
+  const langName = langNames[langCode] || 'Deutsch';
+  const starterPhrase = langCode === 'de' ? `Beginne mit "${placeName} ist..."` :
+                        langCode === 'en' ? `Start with "${placeName} is..."` :
+                        langCode === 'fr' ? `Commence par "${placeName} est..."` :
+                        langCode === 'it' ? `Inizia con "${placeName} è..."` :
+                        langCode === 'es' ? `Empieza con "${placeName} es..."` :
+                        `Start with "${placeName} is..."`;
+
   const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt gerade durch ${placeName} (${region}).
 
 ${wikiContext ? `Hintergrundinformation aus Wikipedia:\n${wikiContext}\n` : ''}
 
-Schreibe eine kurze, natürliche Sprachinformation über ${placeName} auf Deutsch. Fokus auf: ${cats.join(', ')}.
+Schreibe eine kurze, natürliche Sprachinformation über ${placeName} in der Sprache ${langName}. Fokus auf: ${cats.join(', ')}.
 
 Regeln:
 - 6-8 Sätze, fliessend und angenehm zum Vorlesen
 - Keine eckigen Klammern, keine Fussnoten, kein Markdown
 - Direkte, angenehme Sprache wie ein Reiseführer
-- Beginne mit "${placeName} ist..."`;
+- ${starterPhrase}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1292,21 +1310,22 @@ Regeln:
 
 // Fallback: Wikipedia direkt ohne Claude
 async function getWikipediaFallback(placeName, lat, lon) {
+  const wikiLang = (state.voiceLang || 'de-DE').split('-')[0];
   try {
     if (lat && lon) {
-      const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=5000&gslimit=1&format=json&origin=*`;
+      const geoUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=5000&gslimit=1&format=json&origin=*`;
       const gr = await fetch(geoUrl);
       const gd = await gr.json();
       const hit = gd.query?.geosearch?.[0];
       if (hit) {
-        const url = `https://de.wikipedia.org/w/api.php?action=query&pageids=${hit.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`;
+        const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&pageids=${hit.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`;
         const r = await fetch(url);
         const d = await r.json();
         const page = Object.values(d.query?.pages || {})[0];
         if (page?.extract?.length > 40) return cleanText(page.extract.substring(0, 600));
       }
     }
-    const url = `https://de.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
+    const url = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
     const r = await fetch(url);
     const d = await r.json();
     const page = Object.values(d.query?.pages || {})[0];
@@ -1429,7 +1448,7 @@ function startTracking() {
 function periodicUpdate() {
   if (!state.tracking) return;
   navigator.geolocation.getCurrentPosition(
-    (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude, false),
+    (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude, true),
     () => {}
   );
 }
