@@ -1089,6 +1089,39 @@ function speak(text) {
   window.speechSynthesis.speak(utter);
 }
 
+// Wie speak(), aber ruft callback auf wenn Sprachausgabe fertig
+function speakAndThen(text, callback) {
+  if (state.muted || !window.speechSynthesis) { callback(); return; }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = state.speechRate;
+  utter.pitch = state.speechPitch || 1.0;
+  const voices = speechSynthesis.getVoices();
+  if (state.selectedVoiceName) {
+    const found = voices.find(v => v.name === state.selectedVoiceName);
+    if (found) { utter.voice = found; utter.lang = found.lang; }
+    else { utter.lang = 'de-DE'; }
+  } else {
+    const preferred = voices.find(v => v.lang === 'de-DE' && v.localService)
+                   || voices.find(v => v.lang.startsWith('de'));
+    if (preferred) { utter.voice = preferred; utter.lang = preferred.lang; }
+    else { utter.lang = 'de-DE'; }
+  }
+  utter.onstart = () => {
+    state.isSpeaking = true;
+    document.getElementById('speakingIndicator').classList.add('active');
+    document.getElementById('audioStatus').textContent = 'Spreche...';
+  };
+  utter.onend = () => {
+    state.isSpeaking = false;
+    document.getElementById('speakingIndicator').classList.remove('active');
+    document.getElementById('audioStatus').textContent = 'Bereit';
+    callback();
+  };
+  utter.onerror = () => { callback(); };
+  window.speechSynthesis.speak(utter);
+}
+
 function toggleMute() {
   state.muted = !state.muted;
   const btn = document.getElementById('muteBtn');
@@ -1418,6 +1451,7 @@ function stopTracking() {
   state.watchId = null;
   state.intervalId = null;
   state.lastSpokenPlace = null;
+  demoIndex = 0; // Demo immer von vorne starten
 
   document.getElementById('active-screen').style.display = 'none';
   document.getElementById('start-screen').style.display = 'flex';
@@ -1473,14 +1507,22 @@ async function showDemo() {
     const shortRegion = p.region.split(',')[0];
     document.getElementById('statRegion').textContent = shortRegion.length > 10 ? shortRegion.substring(0,9)+'…' : shortRegion;
 
-    if (claudeText) {
-      document.getElementById('infoText').className = 'info-text';
-      document.getElementById('infoText').textContent = claudeText;
-      speak(claudeText);
-    }
-
     if (demoIndex < demoPlaces.length) {
-      setTimeout(runDemo, 18000); // next demo after 18s
+      if (claudeText) {
+        document.getElementById('infoText').className = 'info-text';
+        document.getElementById('infoText').textContent = claudeText;
+        // Warte bis Sprachausgabe fertig, dann 4s Pause, dann nächster Ort
+        speakAndThen(claudeText, () => setTimeout(runDemo, 4000));
+      } else {
+        setTimeout(runDemo, 5000);
+      }
+    } else {
+      // Letzter Ort – einfach vorlesen ohne weiterzuschalten
+      if (claudeText) {
+        document.getElementById('infoText').className = 'info-text';
+        document.getElementById('infoText').textContent = claudeText;
+        speak(claudeText);
+      }
     }
   };
 
