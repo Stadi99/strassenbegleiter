@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.1</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.2</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -1451,7 +1451,8 @@ function stopTracking() {
   state.watchId = null;
   state.intervalId = null;
   state.lastSpokenPlace = null;
-  demoIndex = 0; // Demo immer von vorne starten
+  demoIndex = 0;
+  demoRunning = false; // Demo-Loop stoppen
 
   document.getElementById('active-screen').style.display = 'none';
   document.getElementById('start-screen').style.display = 'flex';
@@ -1470,6 +1471,7 @@ const demoPlaces = [
 ];
 
 let demoIndex = 0;
+let demoRunning = false;
 
 async function showDemo() {
   document.getElementById('start-screen').style.display = 'none';
@@ -1479,8 +1481,10 @@ async function showDemo() {
   state.tracking = true;
 
   showToast('Demo-Modus: Bern → Interlaken');
+  demoRunning = true;
 
   const runDemo = async () => {
+    if (!demoRunning) return; // Abbruch wenn Stop gedrückt
     if (demoIndex >= demoPlaces.length) {
       stopTracking();
       return;
@@ -1512,9 +1516,9 @@ async function showDemo() {
         document.getElementById('infoText').className = 'info-text';
         document.getElementById('infoText').textContent = claudeText;
         // Warte bis Sprachausgabe fertig, dann 4s Pause, dann nächster Ort
-        speakAndThen(claudeText, () => setTimeout(runDemo, 4000));
+        speakAndThen(claudeText, () => { if (demoRunning) setTimeout(runDemo, 4000); });
       } else {
-        setTimeout(runDemo, 5000);
+        if (demoRunning) setTimeout(runDemo, 5000);
       }
     } else {
       // Letzter Ort – einfach vorlesen ohne weiterzuschalten
