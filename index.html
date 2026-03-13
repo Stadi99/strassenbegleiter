@@ -1157,6 +1157,16 @@ async function getWikidataInfo(placeName) {
   }
 }
 
+// Bereinigt Wikipedia-Text für Sprachausgabe
+function cleanText(text) {
+  return text
+    .replace(/\[.*?\]/g, '')          // [IPA-Aussprache], [1], [Anm. 1] etc.
+    .replace(/\(.*?\)/g, '')          // (Klammerinhalt) – oft Jahreszahlen/Hinweise
+    .replace(/\s{2,}/g, ' ')          // mehrfache Leerzeichen
+    .replace(/\s([,\.;:])/g, '$1')    // Leerzeichen vor Satzzeichen
+    .trim();
+}
+
 // ============================================================
 // WIKIPEDIA API – beschreibender Text, gefiltert nach Kategorien
 // Sucht per GPS-Koordinaten – findet immer den richtigen Ort
@@ -1266,7 +1276,7 @@ async function getClaudeInfo(placeName, region, lat, lon) {
       .trim();
 
     if (result.length < 40) return await getWikipediaFallback(placeName, lat, lon);
-    return result;
+    return cleanText(result);
 
   } catch {
     return await getWikipediaFallback(placeName, lat, lon);
@@ -1287,7 +1297,7 @@ async function getWikipediaFallback(placeName, lat, lon) {
         const r = await fetch(url);
         const d = await r.json();
         const page = Object.values(d.query?.pages || {})[0];
-        if (page?.extract?.length > 40) return page.extract.substring(0, 600);
+        if (page?.extract?.length > 40) return cleanText(page.extract.substring(0, 600));
       }
     }
     // Letzter Ausweg: einfache Namenssuche
@@ -1295,7 +1305,7 @@ async function getWikipediaFallback(placeName, lat, lon) {
     const r = await fetch(url);
     const d = await r.json();
     const page = Object.values(d.query?.pages || {})[0];
-    return page?.extract?.length > 40 ? page.extract.substring(0, 600) : null;
+    return page?.extract?.length > 40 ? cleanText(page.extract.substring(0, 600)) : null;
   } catch {
     return null;
   }
