@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v1.9</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.1</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -1185,8 +1185,8 @@ function cleanText(text) {
 }
 
 // ============================================================
-// WIKIPEDIA API – beschreibender Text, gefiltert nach Kategorien
-// Sucht per GPS-Koordinaten – findet immer den richtigen Ort
+// CLAUDE API – natürliche Ortsbeschreibung auf Deutsch
+// Verwendet Wikipedia als Hintergrundkontext für bessere Antworten
 // ============================================================
 async function getClaudeInfo(placeName, region, lat, lon) {
   const showPop     = document.getElementById('tog-pop')?.checked;
@@ -1195,115 +1195,71 @@ async function getClaudeInfo(placeName, region, lat, lon) {
   const showSights  = document.getElementById('tog-sights')?.checked;
   const showEconomy = document.getElementById('tog-economy')?.checked;
 
+  // 1. Wikipedia-Kontext holen (koordinatenbasiert)
+  let wikiContext = '';
   try {
-    // 1. Koordinaten-basierte Suche – findet Artikel in der Nähe des GPS-Standorts
-    //    gsradius=10000 = 10km Umkreis, gslimit=5 = max 5 Treffer
-    const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=5&format=json&origin=*`;
+    const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=3&format=json&origin=*`;
     const gr = await fetch(geoUrl);
     const gd = await gr.json();
     const geoResults = gd.query?.geosearch || [];
+    const best = geoResults.find(r =>
+      r.title.toLowerCase().includes(placeName.toLowerCase()) ||
+      placeName.toLowerCase().includes(r.title.toLowerCase())
+    ) || geoResults[0];
 
-    let pageId = null;
-
-    if (geoResults.length > 0) {
-      // Bevorzuge Artikel dessen Titel dem Ortsnamen ähnelt
-      const exact = geoResults.find(r =>
-        r.title.toLowerCase() === placeName.toLowerCase() ||
-        r.title.toLowerCase().includes(placeName.toLowerCase()) ||
-        placeName.toLowerCase().includes(r.title.toLowerCase())
-      );
-      const best = exact || geoResults[0];
-      pageId = best.pageid;
+    if (best) {
+      const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${best.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=8&format=json&origin=*`;
+      const er = await fetch(extractUrl);
+      const ed = await er.json();
+      const page = Object.values(ed.query?.pages || {})[0];
+      if (page?.extract) wikiContext = page.extract.substring(0, 800);
     }
+  } catch { /* Wikipedia optional */ }
 
-    // 2. Fallback: Namenssuche mit Länderhinweis aus Region
-    if (!pageId) {
-      const country = region.includes('Schweiz') ? 'Schweiz' :
-                      region.includes('Deutschland') ? 'Deutschland' :
-                      region.includes('Österreich') ? 'Österreich' : '';
-      const searchUrl = `https://de.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(placeName + ' ' + country)}&srlimit=5&format=json&origin=*`;
-      const sr = await fetch(searchUrl);
-      const sd = await sr.json();
-      const results = sd.query?.search || [];
-      const exact2 = results.find(r => r.title.toLowerCase() === placeName.toLowerCase());
-      const best2 = exact2 || results[0];
-      if (best2) pageId = best2.pageid;
-    }
+  // 2. Kategorien für den Prompt
+  const cats = [];
+  if (showRegion)  cats.push('Lage und Einbettung in die Region');
+  if (showPop)     cats.push('Einwohnerzahl und Bevölkerung');
+  if (showHistory) cats.push('Geschichte');
+  if (showSights)  cats.push('Sehenswürdigkeiten und Besonderheiten');
+  if (showEconomy) cats.push('Wirtschaft und Bildung');
+  if (cats.length === 0) cats.push('allgemeine Informationen');
 
-    if (!pageId) return await getWikipediaFallback(placeName, lat, lon);
+  const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt gerade durch ${placeName} (${region}).
 
-    // 3. Hole kompletten Artikel-Text
-    const extractUrl = `https://de.wikipedia.org/w/api.php?action=query&pageids=${pageId}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`;
-    const er = await fetch(extractUrl);
-    const ed = await er.json();
-    const pages = ed.query?.pages;
-    if (!pages) return null;
+${wikiContext ? `Hintergrundinformation aus Wikipedia:\n${wikiContext}\n` : ''}
 
-    const page = Object.values(pages)[0];
-    const fullText = (page.extract || '').trim();
-    if (!fullText || fullText.length < 50) return await getWikipediaFallback(placeName, lat, lon);
+Schreibe eine kurze, natürliche Sprachinformation über ${placeName} auf Deutsch. Fokus auf: ${cats.join(', ')}.
 
-    // 4. Splitte Text in Abschnitte
-    const lines = fullText.split('\n');
-    const sectionMap = {};
-    let currentSection = 'intro';
-    sectionMap['intro'] = [];
+Regeln:
+- 6-8 Sätze, fliessend und angenehm zum Vorlesen
+- Keine eckigen Klammern, keine Fussnoten, kein Markdown
+- Direkte, angenehme Sprache wie ein Reiseführer
+- Beginne mit "${placeName} ist..."`;
 
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      if (trimmed.length < 60 && !trimmed.match(/[.!?]$/) && trimmed.length > 2) {
-        currentSection = trimmed.toLowerCase();
-        sectionMap[currentSection] = sectionMap[currentSection] || [];
-      } else {
-        const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed];
-        sectionMap[currentSection].push(...sentences);
-      }
-    }
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text;
+    if (text) return cleanText(text);
+  } catch { /* Fallback zu Wikipedia */ }
 
-    const parts = [];
-    const introSentences = sectionMap['intro'] || [];
-
-    if (showRegion || showPop) {
-      parts.push(...introSentences.slice(0, 3));
-    } else {
-      parts.push(introSentences[0] || '');
-    }
-
-    for (const [title, sentences] of Object.entries(sectionMap)) {
-      if (title === 'intro' || !sentences.length) continue;
-      const isHistory = /geschicht|gründ|entsteh|ursprung|herkunft|mittelalter|entwicklung|vergangenheit|früh|namen|besiedlung|röm|kelten|krieg|reforma/.test(title);
-      const isSights  = /sehenswürd|tourismus|kultur|wahrzeichen|museum|schloss|kirch|attraktion|denkmal|freizeit|sport|ausflug|besuchen|sehen/.test(title);
-      const isEconomy = /wirtschaft|industrie|bildung|schule|universität|hochschule|verkehr|infrastruktur|unternehmen|gewerbe|handel|arbeit|beruf|firma/.test(title);
-      const isOther   = !isHistory && !isSights && !isEconomy;
-      const activeFlags = [showRegion, showHistory, showSights, showEconomy].filter(Boolean).length;
-
-      if (showHistory && isHistory)       parts.push(...sentences.slice(0, 2));
-      if (showSights  && isSights)        parts.push(...sentences.slice(0, 2));
-      if (showEconomy && isEconomy)       parts.push(...sentences.slice(0, 2));
-      if (isOther && activeFlags >= 2)    parts.push(sentences[0]);
-    }
-
-    const result = parts
-      .map(s => s.trim())
-      .filter(s => s.length > 15)
-      .slice(0, 6)
-      .join(' ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-
-    if (result.length < 40) return await getWikipediaFallback(placeName, lat, lon);
-    return cleanText(result);
-
-  } catch {
-    return await getWikipediaFallback(placeName, lat, lon);
-  }
+  // Fallback: Wikipedia-Text direkt verwenden
+  if (wikiContext) return cleanText(wikiContext.substring(0, 600));
+  return null;
 }
 
-// Fallback: Geosearch ohne Namensfilter
+// Fallback: Wikipedia direkt ohne Claude
 async function getWikipediaFallback(placeName, lat, lon) {
   try {
-    // Versuche nochmals nur mit Koordinaten, nimm ersten Treffer
     if (lat && lon) {
       const geoUrl = `https://de.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=5000&gslimit=1&format=json&origin=*`;
       const gr = await fetch(geoUrl);
@@ -1317,7 +1273,6 @@ async function getWikipediaFallback(placeName, lat, lon) {
         if (page?.extract?.length > 40) return cleanText(page.extract.substring(0, 600));
       }
     }
-    // Letzter Ausweg: einfache Namenssuche
     const url = `https://de.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(placeName)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`;
     const r = await fetch(url);
     const d = await r.json();
