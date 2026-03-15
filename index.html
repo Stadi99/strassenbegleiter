@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.6</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.8</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -1145,23 +1145,40 @@ function readAgain() {
 // ============================================================
 async function getPlaceName(lat, lon) {
   try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=10&accept-language=de`,
-      { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }
-    );
-    const d = await r.json();
-    return d;
+    // zoom=14: lokaler Ortsname für Anzeige (z.B. "Unterwasser")
+    // zoom=10: politische Gemeinde für Wikipedia/Claude (z.B. "Wildhaus-Alt St. Johann")
+    const lang = (state.voiceLang || 'de-DE').split('-')[0];
+    const [r14, r10] = await Promise.all([
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14&accept-language=${lang}`, { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }),
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=10&accept-language=${lang}`, { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } })
+    ]);
+    const d14 = await r14.json();
+    const d10 = await r10.json();
+    // Kombiniert: Adresse von zoom=10 (Gemeinde), aber lokaler Name von zoom=14
+    d10._localName = extractLocalName(d14);
+    return d10;
   } catch(e) {
     return null;
   }
 }
 
+function extractLocalName(nominatim14) {
+  // Ortsteil / Weiler / Dorf aus zoom=14
+  const a = nominatim14.address || {};
+  return a.village || a.hamlet || a.suburb || a.neighbourhood || a.municipality || a.town || a.city || nominatim14.name || null;
+}
+
 function extractPlaceName(nominatim) {
-  // Bei zoom=10 gibt Nominatim die Gemeinde direkt als "name" zurück
-  if (nominatim.name) return nominatim.name;
-  // Fallback auf Adressfelder – Gemeinde vor Ortsteil
-  const a = nominatim.address;
-  return a.municipality || a.city || a.town || a.village || a.hamlet || a.county || 'Unbekannt';
+  // Zeige lokalen Ortsnamen (Ortsteil) wenn vorhanden, sonst Gemeinde
+  if (nominatim._localName) return nominatim._localName;
+  const a = nominatim.address || {};
+  return a.municipality || a.city || a.town || a.village || nominatim.name || a.hamlet || a.county || 'Unbekannt';
+}
+
+function extractMunicipalityName(nominatim) {
+  // Politische Gemeinde für Wikipedia/Claude-Suche
+  const a = nominatim.address || {};
+  return a.municipality || a.city || a.town || a.village || nominatim.name || 'Unbekannt';
 }
 
 function extractRegion(nominatim) {
@@ -1221,7 +1238,7 @@ function cleanText(text) {
 // CLAUDE API – natürliche Ortsbeschreibung auf Deutsch
 // Verwendet Wikipedia als Hintergrundkontext für bessere Antworten
 // ============================================================
-async function getClaudeInfo(placeName, region, lat, lon) {
+async function getClaudeInfo(localName, municipalityName, region, lat, lon) {
   const showPop     = document.getElementById('tog-pop')?.checked;
   const showRegion  = document.getElementById('tog-region')?.checked;
   const showHistory = document.getElementById('tog-history')?.checked;
@@ -1258,7 +1275,8 @@ async function getClaudeInfo(placeName, region, lat, lon) {
   if (showEconomy) cats.push('Wirtschaft und Bildung');
   if (cats.length === 0) cats.push('allgemeine Informationen');
 
-  const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt gerade durch ${placeName} (${region}).
+  const displayName = localName !== municipalityName ? `${localName} (Gemeinde ${municipalityName})` : localName;
+  const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt gerade durch ${displayName} (${region}).
 
 ${wikiContext ? `Hintergrundinformation aus Wikipedia:\n${wikiContext}\n` : ''}
 
@@ -1268,7 +1286,7 @@ Regeln:
 - 6-8 Sätze, fliessend und angenehm zum Vorlesen
 - Keine eckigen Klammern, keine Fussnoten, kein Markdown
 - Direkte, angenehme Sprache wie ein Reiseführer
-- Beginne mit "${placeName} ist..."`;
+- Beginne mit "${localName} ist..."`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1326,18 +1344,19 @@ async function updateLocation(lat, lon, force = false) {
   const nominatim = await getPlaceName(lat, lon);
   if (!nominatim) return;
 
-  const placeName = extractPlaceName(nominatim);
+  const placeName = extractPlaceName(nominatim);       // lokaler Ortsname (Anzeige)
+  const municipalityName = extractMunicipalityName(nominatim); // Gemeinde (für Wikipedia/Claude)
   const region = extractRegion(nominatim);
 
   document.getElementById('locationName').textContent = placeName;
   document.getElementById('locationRegion').textContent = region;
 
-  const isNewPlace = placeName !== state.lastSpokenPlace;
+  const isNewPlace = municipalityName !== state.lastSpokenPlace;
 
   if (!isNewPlace && !force) return;
 
-  state.lastSpokenPlace = placeName;
-  state.currentPlace = { placeName, region, lat, lon, time: new Date() };
+  state.lastSpokenPlace = municipalityName;
+  state.currentPlace = { placeName, municipalityName, region, lat, lon, time: new Date() };
 
   // Add to log
   addToLog(placeName, region);
@@ -1356,8 +1375,8 @@ async function updateLocation(lat, lon, force = false) {
 
   // Wikidata + Wikipedia in parallel
   const [wikiStats, claudeText] = await Promise.all([
-    getWikidataInfo(placeName),
-    getClaudeInfo(placeName, region, lat, lon)
+    getWikidataInfo(municipalityName),
+    getClaudeInfo(placeName, municipalityName, region, lat, lon)
   ]);
 
   // Update stats
@@ -1530,21 +1549,7 @@ async function showDemo() {
     }
   };
 
-  // Warten bis Stimmen geladen sind, dann Demo starten
-  await waitForVoices();
   runDemo();
-}
-
-function waitForVoices() {
-  return new Promise(resolve => {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0) { resolve(); return; }
-    const timeout = setTimeout(resolve, 3000);
-    speechSynthesis.onvoiceschanged = () => {
-      clearTimeout(timeout);
-      resolve();
-    };
-  });
 }
 </script>
 </body>
