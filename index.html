@@ -118,7 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <header>
     <div class="logo">Strassen<br><span>BEGLEITER</span></div>
     <div class="hdr-right">
-      <div class="version">v3.2</div>
+      <div class="version">v3.3</div>
       <div class="status-dot" id="dot"></div>
     </div>
   </header>
@@ -623,8 +623,7 @@ async function claudeDesc(local, muni, region, lat, lon) {
     // 4. Splitte in Abschnitte
     const sectionMap = { intro: [] };
     let cur = 'intro';
-    for (const line of fullText.split('
-')) {
+    for (const line of fullText.split('\n')) {
       const t = line.trim();
       if (!t) continue;
       if (t.length < 60 && !t.match(/[.!?]$/) && t.length > 2) {
