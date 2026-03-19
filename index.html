@@ -673,7 +673,110 @@
   <main>
     <!-- START SCREEN -->
     <div id="start-screen">
-      <div class="hero-icon">🚗</div>
+      <div class="mountain-banner">
+        <svg viewBox="0 0 480 185" width="100%" style="display:block">
+          <defs>
+            <linearGradient id="sky-g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2F76B0"/>
+              <stop offset="100%" stop-color="#8EC8E8"/>
+            </linearGradient>
+            <linearGradient id="snow-g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#EEF3F7"/>
+              <stop offset="100%" stop-color="#D4DDE4"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Sky -->
+          <rect width="480" height="185" fill="url(#sky-g)"/>
+
+          <!-- Cloud 1 -->
+          <ellipse cx="78" cy="32" rx="42" ry="12" fill="white" opacity="0.82"/>
+          <ellipse cx="96" cy="25" rx="28" ry="11" fill="white" opacity="0.90"/>
+          <ellipse cx="58" cy="36" rx="22" ry="9"  fill="white" opacity="0.75"/>
+
+          <!-- Cloud 2 -->
+          <ellipse cx="348" cy="22" rx="36" ry="10" fill="white" opacity="0.70"/>
+          <ellipse cx="368" cy="16" rx="24" ry="9"  fill="white" opacity="0.80"/>
+
+          <!-- Distant hazy mountains -->
+          <path d="M 0,185 L 0,136 Q 48,128 90,122 Q 140,116 190,114 Q 240,112 290,116 Q 340,120 390,118 Q 435,116 480,120 L 480,185 Z" fill="#ADC3D4" opacity="0.7"/>
+
+          <!-- Main Churfirsten rocky ridge (7 peaks, Hinterrugg tallest, Chäserrugg prominent on right) -->
+          <path d="
+            M 0,185 L 0,152
+            Q 22,145 38,140
+            Q 46,126 55,84
+            L 63,97 Q 76,99 88,96
+            Q 97,83 108,74
+            L 116,88 Q 128,92 137,89
+            Q 148,74 164,69
+            L 172,84 Q 185,90 196,87
+            Q 210,76 244,72
+            L 254,85 Q 266,90 276,86
+            Q 290,60 312,55
+            L 326,72 Q 337,82 347,80
+            Q 360,70 376,73
+            L 385,85 Q 396,90 405,86
+            Q 418,63 434,60
+            L 445,76 Q 458,88 480,97
+            L 480,185 Z"
+            fill="#6E7868"/>
+
+          <!-- Rocky highlights / lighter faces on peaks -->
+          <path d="M 55,84 L 48,105 L 66,105 Z"  fill="#8E9688" opacity="0.55"/>
+          <path d="M 108,74 L 100,94 L 118,94 Z" fill="#8E9688" opacity="0.5"/>
+          <path d="M 164,69 L 155,90 L 174,90 Z" fill="#8E9688" opacity="0.5"/>
+          <path d="M 244,72 L 232,92 L 256,92 Z" fill="#8E9688" opacity="0.45"/>
+          <path d="M 312,55 L 299,78 L 326,78 Z" fill="#8E9688" opacity="0.6"/>
+          <path d="M 376,73 L 366,90 L 388,90 Z" fill="#8E9688" opacity="0.5"/>
+          <path d="M 434,60 L 422,82 L 448,82 Z" fill="#8E9688" opacity="0.55"/>
+
+          <!-- Snow patches (summer — only small remnants on highest peaks) -->
+          <path d="M 310,56 Q 315,53 320,58 Q 316,62 310,56 Z"  fill="url(#snow-g)" opacity="0.9"/>
+          <path d="M 432,61 Q 436,58 440,63 Q 437,66 432,61 Z"  fill="url(#snow-g)" opacity="0.85"/>
+          <path d="M 162,70 Q 165,68 168,71 Q 166,74 162,70 Z"  fill="url(#snow-g)" opacity="0.75"/>
+
+          <!-- Small Chäserrugg building (Herzog & de Meuron restaurant) -->
+          <rect x="428" y="55" width="9" height="5" fill="#EDE8E2" rx="1"/>
+          <polygon points="427,55 432.5,51.5 438,55" fill="#C4B8A8"/>
+
+          <!-- Alpine green slopes -->
+          <path d="
+            M 0,185 L 0,165
+            Q 60,157 120,153
+            Q 180,149 240,148
+            Q 300,149 360,153
+            Q 420,158 480,163
+            L 480,185 Z"
+            fill="#5A8A28"/>
+
+          <!-- Meadow foreground -->
+          <path d="
+            M 0,185 L 0,176
+            Q 80,170 160,169
+            Q 240,168 320,169
+            Q 400,170 480,175
+            L 480,185 Z"
+            fill="#72A830"/>
+
+          <!-- Conifer clusters left -->
+          <polygon points="32,176 26,185 38,185" fill="#2B5820"/>
+          <polygon points="24,179 18,185 30,185" fill="#336624"/>
+          <polygon points="44,177 38,185 50,185" fill="#2B5820"/>
+          <polygon points="14,180 9,185 19,185"  fill="#336624"/>
+
+          <!-- Conifer clusters right -->
+          <polygon points="448,174 442,185 454,185" fill="#2B5820"/>
+          <polygon points="458,176 452,185 464,185" fill="#336624"/>
+          <polygon points="438,177 433,185 443,185" fill="#2B5820"/>
+          <polygon points="468,178 463,185 473,185" fill="#336624"/>
+
+          <!-- Middle-ground tree hints -->
+          <polygon points="185,165 181,173 189,173" fill="#3A6E28"/>
+          <polygon points="296,163 292,171 300,171" fill="#3A6E28"/>
+          <polygon points="388,165 384,173 392,173" fill="#3A6E28"/>
+        </svg>
+      </div>
       <div class="start-text">
         <h2>Bereit zur Fahrt?</h2>
         <p>Der Strassenbegleiter liest dir automatisch Infos zur Gegend vor, sobald du einen neuen Ort durchfährst.</p>
@@ -682,7 +785,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v3.1</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.9</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -1519,7 +1622,7 @@ async function showDemo() {
 
     const [wikiStats, claudeText] = await Promise.all([
       getWikidataInfo(p.name),
-      getClaudeInfo(p.name, p.name, p.region, p.lat, p.lon)
+      getClaudeInfo(p.name, p.region, p.lat, p.lon)
     ]);
 
     if (wikiStats) {
