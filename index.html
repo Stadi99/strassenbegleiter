@@ -118,7 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <header>
     <div class="logo">Strassen<br><span>BEGLEITER</span></div>
     <div class="hdr-right">
-      <div class="version">v3.0</div>
+      <div class="version">v3.2</div>
       <div class="status-dot" id="dot"></div>
     </div>
   </header>
@@ -571,41 +571,113 @@ async function wikipedia(lat, lon, muni) {
   } catch { return ''; }
 }
 
-// Returns description string or null
+// Wikipedia-basierte Ortsbeschreibung mit Kategorie-Filterung
+// Kein API Key nötig – funktioniert direkt im Browser
 async function claudeDesc(local, muni, region, lat, lon) {
-  const wiki=await wikipedia(lat,lon,muni);
-  const cats=[];
-  if($('tog-region').checked)  cats.push('Lage und Einbettung in die Region');
-  if($('tog-pop').checked)     cats.push('Einwohnerzahl');
-  if($('tog-history').checked) cats.push('Geschichte');
-  if($('tog-sights').checked)  cats.push('Sehenswürdigkeiten');
-  if($('tog-economy').checked) cats.push('Wirtschaft und Bildung');
-  if(!cats.length) cats.push('allgemeine Informationen');
+  const lang = S.voiceLang || 'de';
+  const showPop     = $('tog-pop')?.checked;
+  const showRegion  = $('tog-region')?.checked;
+  const showHistory = $('tog-history')?.checked;
+  const showSights  = $('tog-sights')?.checked;
+  const showEconomy = $('tog-economy')?.checked;
 
-  const langs={de:'Deutsch',en:'English',fr:'français',it:'italiano',es:'español'};
-  const langName=langs[S.voiceLang]||'Deutsch';
-  const display=local!==muni?`${local} (Gemeinde ${muni})`:local;
+  try {
+    // 1. Koordinaten-basierte Suche
+    const geo = await(await fetch(
+      `https://${lang}.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=5&format=json&origin=*`
+    )).json();
+    const results = geo.query?.geosearch || [];
 
-  const prompt=`Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt durch ${display} (${region}).
-${wiki?'\nWikipedia-Hintergrund:\n'+wiki+'\n':''}
-Schreibe eine kurze Sprachinformation auf ${langName}. Fokus: ${cats.join(', ')}.
-- 5-7 Sätze, fliessend zum Vorlesen
-- Kein Markdown, keine Klammern, keine Fussnoten
-- Beginne mit: "${local} ist..."`;
+    let pageId = null;
+    if (results.length > 0) {
+      const exact = results.find(r =>
+        r.title.toLowerCase() === muni.toLowerCase() ||
+        r.title.toLowerCase().includes(muni.toLowerCase()) ||
+        muni.toLowerCase().includes(r.title.toLowerCase())
+      );
+      pageId = (exact || results[0]).pageid;
+    }
 
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({
-      model:'claude-haiku-4-5-20251001',
-      max_tokens:500,
-      messages:[{role:'user',content:prompt}]
-    })
-  });
-  const data=await res.json();
-  if(data.error) throw new Error(data.error.message||data.error.type);
-  const text=data.content?.[0]?.text;
-  return text?clean(text):null;
+    // 2. Fallback: Namenssuche
+    if (!pageId) {
+      const country = region.includes('Schweiz') ? 'Schweiz' :
+                      region.includes('Deutschland') ? 'Deutschland' :
+                      region.includes('Österreich') ? 'Österreich' : '';
+      const sr = await(await fetch(
+        `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(muni+' '+country)}&srlimit=5&format=json&origin=*`
+      )).json();
+      const hits = sr.query?.search || [];
+      const best = hits.find(r => r.title.toLowerCase() === muni.toLowerCase()) || hits[0];
+      if (best) pageId = best.pageid;
+    }
+
+    if (!pageId) return await wikiDescFallback(muni, lat, lon);
+
+    // 3. Hole kompletten Artikel
+    const ext = await(await fetch(
+      `https://${lang}.wikipedia.org/w/api.php?action=query&pageids=${pageId}&prop=extracts&explaintext=true&exsectionformat=plain&format=json&origin=*`
+    )).json();
+    const fullText = (Object.values(ext.query?.pages||{})[0]?.extract||'').trim();
+    if (fullText.length < 50) return await wikiDescFallback(muni, lat, lon);
+
+    // 4. Splitte in Abschnitte
+    const sectionMap = { intro: [] };
+    let cur = 'intro';
+    for (const line of fullText.split('
+')) {
+      const t = line.trim();
+      if (!t) continue;
+      if (t.length < 60 && !t.match(/[.!?]$/) && t.length > 2) {
+        cur = t.toLowerCase(); sectionMap[cur] = sectionMap[cur] || [];
+      } else {
+        (sectionMap[cur] = sectionMap[cur]||[]).push(...(t.match(/[^.!?]+[.!?]+/g)||[t]));
+      }
+    }
+
+    // 5. Wähle Sätze nach aktiven Kategorien
+    const parts = [];
+    const intro = sectionMap['intro'] || [];
+    parts.push(...intro.slice(0, (showRegion || showPop) ? 3 : 1));
+
+    for (const [title, sents] of Object.entries(sectionMap)) {
+      if (title === 'intro' || !sents.length) continue;
+      const isHistory = /geschicht|gründ|entsteh|ursprung|mittelalter|entwicklung|röm|kelten|krieg/.test(title);
+      const isSights  = /sehenswürd|tourismus|kultur|wahrzeichen|museum|schloss|kirch|attraktion|denkmal/.test(title);
+      const isEconomy = /wirtschaft|industrie|bildung|schule|universität|verkehr|unternehmen|gewerbe/.test(title);
+      if (showHistory && isHistory) parts.push(...sents.slice(0, 2));
+      if (showSights  && isSights)  parts.push(...sents.slice(0, 2));
+      if (showEconomy && isEconomy) parts.push(...sents.slice(0, 2));
+    }
+
+    const result = parts.map(s=>s.trim()).filter(s=>s.length>15).slice(0,6).join(' ').replace(/\s{2,}/g,' ').trim();
+    if (result.length < 40) return await wikiDescFallback(muni, lat, lon);
+    return clean(result);
+
+  } catch {
+    return await wikiDescFallback(muni, lat, lon);
+  }
+}
+
+async function wikiDescFallback(muni, lat, lon) {
+  const lang = S.voiceLang || 'de';
+  try {
+    const geo = await(await fetch(
+      `https://${lang}.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=5000&gslimit=1&format=json&origin=*`
+    )).json();
+    const hit = geo.query?.geosearch?.[0];
+    if (hit) {
+      const d = await(await fetch(
+        `https://${lang}.wikipedia.org/w/api.php?action=query&pageids=${hit.pageid}&prop=extracts&exintro=true&explaintext=true&exsentences=5&format=json&origin=*`
+      )).json();
+      const text = Object.values(d.query?.pages||{})[0]?.extract||'';
+      if (text.length > 40) return clean(text.slice(0,600));
+    }
+    const d = await(await fetch(
+      `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(muni)}&prop=extracts&exintro=true&explaintext=true&exsentences=4&format=json&origin=*`
+    )).json();
+    const text = Object.values(d.query?.pages||{})[0]?.extract||'';
+    return text.length > 40 ? clean(text.slice(0,600)) : null;
+  } catch { return null; }
 }
 
 // ─────────────────────────────────────────
