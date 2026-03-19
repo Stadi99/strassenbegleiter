@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.9</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v3.0</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -907,6 +907,7 @@ const state = {
   updateIntervalMs: 3 * 60 * 1000,
   currentPlace: null,
   lastSpokenPlace: null,
+  isLoading: false,
   speechRate: 0.95,
   speechPitch: 1.0,
   selectedVoiceName: null,
@@ -1293,21 +1294,15 @@ Regeln:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await res.json();
-    if (data.error) {
-      console.warn('Claude API Fehler:', data.error.type, data.error.message);
-      showToast('⚠️ API: ' + data.error.message?.substring(0, 60));
-    }
     const text = data.content?.[0]?.text;
     if (text) return cleanText(text);
-  } catch(e) {
-    console.warn('Claude fetch Fehler:', e.message);
-  }
+  } catch { /* Fallback zu Wikipedia */ }
 
   // Fallback: Wikipedia-Text direkt verwenden
   if (wikiContext) return cleanText(wikiContext.substring(0, 600));
@@ -1359,8 +1354,9 @@ async function updateLocation(lat, lon, force = false) {
 
   const isNewPlace = municipalityName !== state.lastSpokenPlace;
 
-  if (!isNewPlace && !force) return;
+  if ((!isNewPlace && !force) || state.isLoading) return;
 
+  state.isLoading = true;
   state.lastSpokenPlace = municipalityName;
   state.currentPlace = { placeName, municipalityName, region, lat, lon, time: new Date() };
 
@@ -1379,26 +1375,40 @@ async function updateLocation(lat, lon, force = false) {
   const stateShort = nominatim.address?.state || region.split(',')[0] || '—';
   document.getElementById('statRegion').textContent = stateShort.length > 10 ? stateShort.substring(0,9)+'…' : stateShort;
 
-  // Wikidata + Wikipedia in parallel
-  const [wikiStats, claudeText] = await Promise.all([
-    getWikidataInfo(municipalityName),
-    getClaudeInfo(placeName, municipalityName, region, lat, lon)
-  ]);
+  try {
+    // Timeout nach 15 Sekunden – verhindert ewiges Hängen
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000));
 
-  // Update stats
-  if (wikiStats) {
-    document.getElementById('statPop').textContent = wikiStats.population || '—';
-    document.getElementById('statArea').textContent = wikiStats.area || '—';
-    document.getElementById('statElev').textContent = wikiStats.elevation || '—';
-  }
+    const [wikiStats, claudeText] = await Promise.race([
+      Promise.all([
+        getWikidataInfo(municipalityName),
+        getClaudeInfo(placeName, municipalityName, region, lat, lon)
+      ]),
+      timeout.then(() => { throw new Error('Timeout'); })
+    ]).catch(async (e) => {
+      console.warn('Hauptanfrage Fehler/Timeout:', e.message);
+      // Bei Timeout: nur Wikipedia-Fallback versuchen
+      const fallback = await getWikipediaFallback(placeName, lat, lon);
+      return [null, fallback];
+    });
 
-  if (claudeText) {
-    document.getElementById('infoText').className = 'info-text';
-    document.getElementById('infoText').textContent = claudeText;
-    speak(claudeText);
-  } else {
-    document.getElementById('infoText').className = 'info-text loading';
-    document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
+    // Update stats
+    if (wikiStats) {
+      document.getElementById('statPop').textContent = wikiStats.population || '—';
+      document.getElementById('statArea').textContent = wikiStats.area || '—';
+      document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+    }
+
+    if (claudeText) {
+      document.getElementById('infoText').className = 'info-text';
+      document.getElementById('infoText').textContent = claudeText;
+      speak(claudeText);
+    } else {
+      document.getElementById('infoText').className = 'info-text loading';
+      document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
+    }
+  } finally {
+    state.isLoading = false;  // IMMER zurücksetzen, auch bei Fehler
   }
 }
 
@@ -1476,6 +1486,7 @@ function stopTracking() {
   state.watchId = null;
   state.intervalId = null;
   state.lastSpokenPlace = null;
+  state.isLoading = false;
   demoIndex = 0;
   demoRunning = false; // Demo-Loop stoppen
 
