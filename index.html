@@ -682,7 +682,7 @@
         ▶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
-      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v3.0</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v3.1</div>
     </div>
 
     <!-- ACTIVE SCREEN -->
@@ -907,7 +907,6 @@ const state = {
   updateIntervalMs: 3 * 60 * 1000,
   currentPlace: null,
   lastSpokenPlace: null,
-  isLoading: false,
   speechRate: 0.95,
   speechPitch: 1.0,
   selectedVoiceName: null,
@@ -1354,9 +1353,8 @@ async function updateLocation(lat, lon, force = false) {
 
   const isNewPlace = municipalityName !== state.lastSpokenPlace;
 
-  if ((!isNewPlace && !force) || state.isLoading) return;
+  if (!isNewPlace && !force) return;
 
-  state.isLoading = true;
   state.lastSpokenPlace = municipalityName;
   state.currentPlace = { placeName, municipalityName, region, lat, lon, time: new Date() };
 
@@ -1375,40 +1373,26 @@ async function updateLocation(lat, lon, force = false) {
   const stateShort = nominatim.address?.state || region.split(',')[0] || '—';
   document.getElementById('statRegion').textContent = stateShort.length > 10 ? stateShort.substring(0,9)+'…' : stateShort;
 
-  try {
-    // Timeout nach 15 Sekunden – verhindert ewiges Hängen
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000));
+  // Wikidata + Wikipedia in parallel
+  const [wikiStats, claudeText] = await Promise.all([
+    getWikidataInfo(municipalityName),
+    getClaudeInfo(placeName, municipalityName, region, lat, lon)
+  ]);
 
-    const [wikiStats, claudeText] = await Promise.race([
-      Promise.all([
-        getWikidataInfo(municipalityName),
-        getClaudeInfo(placeName, municipalityName, region, lat, lon)
-      ]),
-      timeout.then(() => { throw new Error('Timeout'); })
-    ]).catch(async (e) => {
-      console.warn('Hauptanfrage Fehler/Timeout:', e.message);
-      // Bei Timeout: nur Wikipedia-Fallback versuchen
-      const fallback = await getWikipediaFallback(placeName, lat, lon);
-      return [null, fallback];
-    });
+  // Update stats
+  if (wikiStats) {
+    document.getElementById('statPop').textContent = wikiStats.population || '—';
+    document.getElementById('statArea').textContent = wikiStats.area || '—';
+    document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+  }
 
-    // Update stats
-    if (wikiStats) {
-      document.getElementById('statPop').textContent = wikiStats.population || '—';
-      document.getElementById('statArea').textContent = wikiStats.area || '—';
-      document.getElementById('statElev').textContent = wikiStats.elevation || '—';
-    }
-
-    if (claudeText) {
-      document.getElementById('infoText').className = 'info-text';
-      document.getElementById('infoText').textContent = claudeText;
-      speak(claudeText);
-    } else {
-      document.getElementById('infoText').className = 'info-text loading';
-      document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
-    }
-  } finally {
-    state.isLoading = false;  // IMMER zurücksetzen, auch bei Fehler
+  if (claudeText) {
+    document.getElementById('infoText').className = 'info-text';
+    document.getElementById('infoText').textContent = claudeText;
+    speak(claudeText);
+  } else {
+    document.getElementById('infoText').className = 'info-text loading';
+    document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
   }
 }
 
@@ -1486,7 +1470,6 @@ function stopTracking() {
   state.watchId = null;
   state.intervalId = null;
   state.lastSpokenPlace = null;
-  state.isLoading = false;
   demoIndex = 0;
   demoRunning = false; // Demo-Loop stoppen
 
@@ -1536,7 +1519,7 @@ async function showDemo() {
 
     const [wikiStats, claudeText] = await Promise.all([
       getWikidataInfo(p.name),
-      getClaudeInfo(p.name, p.region, p.lat, p.lon)
+      getClaudeInfo(p.name, p.name, p.region, p.lat, p.lon)
     ]);
 
     if (wikiStats) {
