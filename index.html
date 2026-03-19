@@ -118,7 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
   <header>
     <div class="logo">Strassen<br><span>BEGLEITER</span></div>
     <div class="hdr-right">
-      <div class="version">v3.3</div>
+      <div class="version">v3.4</div>
       <div class="status-dot" id="dot"></div>
     </div>
   </header>
@@ -684,7 +684,7 @@ async function wikiDescFallback(muni, lat, lon) {
 // ONE function called by everything.
 // Prevents parallel loads with isLoading flag.
 // ─────────────────────────────────────────
-async function loadPlace(local, muni, region, lat, lon) {
+async function loadPlace(local, muni, region, lat, lon, autoSpeak=true) {
   // Guard 1: same municipality → skip
   if(muni===S.lastMunicipality) return;
   // Guard 2: already loading → skip
@@ -718,7 +718,7 @@ async function loadPlace(local, muni, region, lat, lon) {
     }
 
     setInfo(desc);
-    if(desc) speak(desc);
+    if(desc && autoSpeak) speak(desc);
 
   } catch(e) {
     console.error('loadPlace error:',e);
@@ -800,13 +800,15 @@ async function demoStep() {
   S.lastMunicipality=null;
   S.isLoading=false;
 
-  await loadPlace(p.local, p.muni, p.region, p.lat, p.lon);
+  await loadPlace(p.local, p.muni, p.region, p.lat, p.lon, false);
 
-  // After speech: pause 3s then next place (if not last)
-  if(S.demoRunning && S.demoIndex<DEMO.length) {
+  // Now speak, then continue to next place
+  if(!S.demoRunning) return;
+  if(S.demoIndex<DEMO.length) {
     speakThen(S.lastText, ()=>{ if(S.demoRunning) setTimeout(demoStep,3000); });
+  } else {
+    speak(S.lastText); // last place
   }
-  // Last place: speak was already triggered inside loadPlace
 }
 
 // ─────────────────────────────────────────
