@@ -673,13 +673,13 @@
   <main>
     <!-- START SCREEN -->
     <div id="start-screen">
-      <div class="hero-icon">🚗</div>
+      <div class="hero-icon">ðŸš—</div>
       <div class="start-text">
         <h2>Bereit zur Fahrt?</h2>
-        <p>Der Strassenbegleiter liest dir automatisch Infos zur Gegend vor, sobald du einen neuen Ort durchfährst.</p>
+        <p>Der Strassenbegleiter liest dir automatisch Infos zur Gegend vor, sobald du einen neuen Ort durchfÃ¤hrst.</p>
       </div>
       <button class="btn-primary" onclick="startTracking()">
-        ▶ STARTEN
+        â–¶ STARTEN
       </button>
       <button class="btn-secondary" onclick="showDemo()">Demo ohne GPS</button>
       <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:3px;border:1px solid var(--border);padding:4px 12px;border-radius:2px;">v2.9</div>
@@ -691,11 +691,11 @@
         <!-- Location Card -->
         <div class="location-card">
           <div class="location-label">Aktueller Ort</div>
-          <div class="location-name" id="locationName">—</div>
+          <div class="location-name" id="locationName">â€”</div>
           <div class="location-region" id="locationRegion">Warte auf GPS...</div>
           <div class="coords">
-            <span id="coordLat">LAT —</span>
-            <span id="coordLon">LON —</span>
+            <span id="coordLat">LAT â€”</span>
+            <span id="coordLon">LON â€”</span>
           </div>
         </div>
 
@@ -709,48 +709,48 @@
             <div class="bar"></div>
           </div>
           <div class="audio-status" id="audioStatus">Bereit</div>
-          <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊 TON</button>
+          <button class="mute-btn" id="muteBtn" onclick="toggleMute()">ðŸ”Š TON</button>
         </div>
 
         <!-- Stats -->
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">Einwohner</div>
-            <div class="stat-value accent" id="statPop">—</div>
+            <div class="stat-value accent" id="statPop">â€”</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Kanton / Land</div>
-            <div class="stat-value" id="statRegion">—</div>
+            <div class="stat-value" id="statRegion">â€”</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Fläche</div>
-            <div class="stat-value" id="statArea">—</div>
+            <div class="stat-label">FlÃ¤che</div>
+            <div class="stat-value" id="statArea">â€”</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">Höhe ü.M.</div>
-            <div class="stat-value" id="statElev">—</div>
+            <div class="stat-label">HÃ¶he Ã¼.M.</div>
+            <div class="stat-value" id="statElev">â€”</div>
           </div>
         </div>
 
         <!-- Info text -->
         <div class="info-card">
           <div class="info-card-header">
-            <div class="info-title">📡 Ortsbeschreibung</div>
-            <button class="btn-secondary" style="padding:4px 10px;font-size:10px;" onclick="readAgain()">↺ Nochmal</button>
+            <div class="info-title">ðŸ“¡ Ortsbeschreibung</div>
+            <button class="btn-secondary" style="padding:4px 10px;font-size:10px;" onclick="readAgain()">â†º Nochmal</button>
           </div>
           <div class="info-text loading" id="infoText">Warte auf Standortdaten...</div>
         </div>
 
         <!-- Control bar -->
         <div class="control-bar">
-          <button class="btn-stop" onclick="stopTracking()">■ STOP</button>
-          <button class="btn-secondary" onclick="forceUpdate()">⟳ Jetzt aktualisieren</button>
+          <button class="btn-stop" onclick="stopTracking()">â–  STOP</button>
+          <button class="btn-secondary" onclick="forceUpdate()">âŸ³ Jetzt aktualisieren</button>
         </div>
 
         <!-- Log -->
         <div class="log-card">
           <div class="log-header" onclick="toggleLog()">
-            <span>▾</span> FAHRTVERLAUF
+            <span>â–¾</span> FAHRTVERLAUF
             <span id="logCount" style="margin-left:auto;color:var(--accent)">0 Orte</span>
           </div>
           <div class="log-body" id="logBody"></div>
@@ -762,7 +762,7 @@
         <div class="section-title">Einstellungen</div>
 
         <div class="info-card">
-          <div class="info-title" style="margin-bottom:14px;">🔔 Abstand zwischen Infos</div>
+          <div class="info-title" style="margin-bottom:14px;">ðŸ”” Abstand zwischen Infos</div>
           <div class="interval-grid" id="intervalGrid">
             <button class="interval-btn" onclick="setInterval_(1)">1 min</button>
             <button class="interval-btn selected" onclick="setInterval_(3)">3 min</button>
@@ -774,13 +774,13 @@
         </div>
 
         <div class="info-card">
-          <div class="info-title" style="margin-bottom:14px;">🗣 Sprachausgabe</div>
+          <div class="info-title" style="margin-bottom:14px;">ðŸ—£ Sprachausgabe</div>
           <div style="margin-bottom:12px;">
             <div class="settings-sub" style="margin-bottom:6px;">STIMME</div>
             <select id="voiceDropdown" class="voice-select" onchange="selectVoiceFromDropdown()">
               <option value="">Lade Stimmen...</option>
             </select>
-            <button class="voice-preview-btn" onclick="previewSelectedVoice()">▶ Stimme testen</button>
+            <button class="voice-preview-btn" onclick="previewSelectedVoice()">â–¶ Stimme testen</button>
           </div>
           <div class="settings-row" style="border-top:1px solid var(--border);padding-top:14px;">
             <div>
@@ -791,7 +791,7 @@
           </div>
           <div class="settings-row">
             <div>
-              <div class="settings-label">Tonhöhe</div>
+              <div class="settings-label">TonhÃ¶he</div>
               <div class="settings-sub" id="pitchLabel">normal</div>
             </div>
             <input type="range" id="speechPitch" min="0.6" max="1.4" step="0.1" value="1.0" oninput="updatePitch(this.value)">
@@ -799,7 +799,7 @@
         </div>
 
         <div class="info-card">
-          <div class="info-title" style="margin-bottom:14px;">📚 Infokategorien</div>
+          <div class="info-title" style="margin-bottom:14px;">ðŸ“š Infokategorien</div>
           <div class="settings-row">
             <div class="settings-label">Einwohnerzahl</div>
             <label class="toggle"><input type="checkbox" id="tog-pop" checked><span class="toggle-slider"></span></label>
@@ -813,7 +813,7 @@
             <label class="toggle"><input type="checkbox" id="tog-history" checked><span class="toggle-slider"></span></label>
           </div>
           <div class="settings-row">
-            <div class="settings-label">Sehenswürdigkeiten</div>
+            <div class="settings-label">SehenswÃ¼rdigkeiten</div>
             <label class="toggle"><input type="checkbox" id="tog-sights" checked><span class="toggle-slider"></span></label>
           </div>
           <div class="settings-row">
@@ -829,10 +829,10 @@
 <!-- Tab bar -->
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" id="tabFahrt" onclick="switchTab('fahrt')">
-    <span class="tab-icon">🚗</span>Fahrt
+    <span class="tab-icon">ðŸš—</span>Fahrt
   </button>
   <button class="tab-btn" id="tabEinstellungen" onclick="switchTab('einstellungen')">
-    <span class="tab-icon">⚙️</span>Einstellungen
+    <span class="tab-icon">âš™ï¸</span>Einstellungen
   </button>
 </div>
 
@@ -895,7 +895,7 @@ function loadSettings() {
   } catch(e) {}
 }
 
-// Einstellungen nach jeder Änderung automatisch speichern
+// Einstellungen nach jeder Ã„nderung automatisch speichern
 // ============================================================
 // STATE
 // ============================================================
@@ -984,11 +984,11 @@ function buildVoiceList() {
 
   if (de.length > 0) {
     const grp = document.createElement('optgroup');
-    grp.label = '🇩🇪 Deutsch';
+    grp.label = 'ðŸ‡©ðŸ‡ª Deutsch';
     de.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v.name;
-      opt.textContent = v.name + (v.localService ? '' : ' ☁️');
+      opt.textContent = v.name + (v.localService ? '' : ' â˜ï¸');
       if (v.name === state.selectedVoiceName) opt.selected = true;
       grp.appendChild(opt);
     });
@@ -1021,7 +1021,7 @@ function selectVoiceFromDropdown() {
   const select = document.getElementById('voiceDropdown');
   state.selectedVoiceName = select.value;
   saveSettings();
-  showToast('✓ ' + select.value);
+  showToast('âœ“ ' + select.value);
 }
 
 function previewSelectedVoice() {
@@ -1037,7 +1037,7 @@ function previewSelectedVoice() {
   window.speechSynthesis.speak(utter);
 }
 
-// Voices load async on mobile — try multiple times
+// Voices load async on mobile â€” try multiple times
 speechSynthesis.onvoiceschanged = buildVoiceList;
 setTimeout(buildVoiceList, 300);
 setTimeout(buildVoiceList, 1200);
@@ -1046,7 +1046,7 @@ setTimeout(buildVoiceList, 3000);
 // Einstellungen laden sobald Seite bereit
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
-  // Toggles: bei jeder Änderung speichern
+  // Toggles: bei jeder Ã„nderung speichern
   ['tog-pop','tog-region','tog-history','tog-sights','tog-economy'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', saveSettings);
   });
@@ -1068,7 +1068,7 @@ function speak(text) {
     if (found) { utter.voice = found; utter.lang = found.lang; }
     else { utter.lang = 'de-DE'; } // Fallback falls Stimme nicht mehr da
   } else {
-    // Standard: beste verfügbare deutsche Stimme
+    // Standard: beste verfÃ¼gbare deutsche Stimme
     const preferred = voices.find(v => v.lang === 'de-DE' && v.localService)
                    || voices.find(v => v.lang.startsWith('de') && v.localService)
                    || voices.find(v => v.lang.startsWith('de'));
@@ -1126,11 +1126,11 @@ function toggleMute() {
   state.muted = !state.muted;
   const btn = document.getElementById('muteBtn');
   if (state.muted) {
-    btn.textContent = '🔇 STUMM';
+    btn.textContent = 'ðŸ”‡ STUMM';
     btn.classList.add('muted');
     window.speechSynthesis.cancel();
   } else {
-    btn.textContent = '🔊 TON';
+    btn.textContent = 'ðŸ”Š TON';
     btn.classList.remove('muted');
   }
 }
@@ -1141,12 +1141,12 @@ function readAgain() {
 }
 
 // ============================================================
-// GEOCODING – place detection
+// GEOCODING â€“ place detection
 // ============================================================
 async function getPlaceName(lat, lon) {
   try {
-    // zoom=14: lokaler Ortsname für Anzeige (z.B. "Unterwasser")
-    // zoom=10: politische Gemeinde für Wikipedia/Claude (z.B. "Wildhaus-Alt St. Johann")
+    // zoom=14: lokaler Ortsname fÃ¼r Anzeige (z.B. "Unterwasser")
+    // zoom=10: politische Gemeinde fÃ¼r Wikipedia/Claude (z.B. "Wildhaus-Alt St. Johann")
     const lang = (state.voiceLang || 'de-DE').split('-')[0];
     const [r14, r10] = await Promise.all([
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&zoom=14&accept-language=${lang}`, { headers: { 'User-Agent': 'StrassenBegleiter/1.0' } }),
@@ -1176,7 +1176,7 @@ function extractPlaceName(nominatim) {
 }
 
 function extractMunicipalityName(nominatim) {
-  // Politische Gemeinde für Wikipedia/Claude-Suche
+  // Politische Gemeinde fÃ¼r Wikipedia/Claude-Suche
   const a = nominatim.address || {};
   return a.municipality || a.city || a.town || a.village || nominatim.name || 'Unbekannt';
 }
@@ -1190,7 +1190,7 @@ function extractRegion(nominatim) {
 }
 
 // ============================================================
-// WIKIDATA – structured data
+// WIKIDATA â€“ structured data
 // ============================================================
 async function getWikidataInfo(placeName) {
   try {
@@ -1216,7 +1216,7 @@ async function getWikidataInfo(placeName) {
 
     return {
       population: pop?.amount ? Math.round(parseFloat(pop.amount)).toLocaleString('de-CH') : null,
-      area: area?.amount ? Math.round(parseFloat(area.amount)) + ' km²' : null,
+      area: area?.amount ? Math.round(parseFloat(area.amount)) + ' kmÂ²' : null,
       elevation: elev?.amount ? Math.round(parseFloat(elev.amount)) + ' m' : null,
     };
   } catch {
@@ -1224,19 +1224,19 @@ async function getWikidataInfo(placeName) {
   }
 }
 
-// Bereinigt Wikipedia-Text für Sprachausgabe
+// Bereinigt Wikipedia-Text fÃ¼r Sprachausgabe
 function cleanText(text) {
   return text
     .replace(/\[.*?\]/g, '')          // [IPA-Aussprache], [1], [Anm. 1] etc.
-    .replace(/\(.*?\)/g, '')          // (Klammerinhalt) – oft Jahreszahlen/Hinweise
+    .replace(/\(.*?\)/g, '')          // (Klammerinhalt) â€“ oft Jahreszahlen/Hinweise
     .replace(/\s{2,}/g, ' ')          // mehrfache Leerzeichen
     .replace(/\s([,\.;:])/g, '$1')    // Leerzeichen vor Satzzeichen
     .trim();
 }
 
 // ============================================================
-// CLAUDE API – natürliche Ortsbeschreibung auf Deutsch
-// Verwendet Wikipedia als Hintergrundkontext für bessere Antworten
+// CLAUDE API â€“ natÃ¼rliche Ortsbeschreibung auf Deutsch
+// Verwendet Wikipedia als Hintergrundkontext fÃ¼r bessere Antworten
 // ============================================================
 async function getClaudeInfo(localName, municipalityName, region, lat, lon) {
   const showPop     = document.getElementById('tog-pop')?.checked;
@@ -1266,26 +1266,26 @@ async function getClaudeInfo(localName, municipalityName, region, lat, lon) {
     }
   } catch { /* Wikipedia optional */ }
 
-  // 2. Kategorien für den Prompt
+  // 2. Kategorien fÃ¼r den Prompt
   const cats = [];
   if (showRegion)  cats.push('Lage und Einbettung in die Region');
-  if (showPop)     cats.push('Einwohnerzahl und Bevölkerung');
+  if (showPop)     cats.push('Einwohnerzahl und BevÃ¶lkerung');
   if (showHistory) cats.push('Geschichte');
-  if (showSights)  cats.push('Sehenswürdigkeiten und Besonderheiten');
+  if (showSights)  cats.push('SehenswÃ¼rdigkeiten und Besonderheiten');
   if (showEconomy) cats.push('Wirtschaft und Bildung');
   if (cats.length === 0) cats.push('allgemeine Informationen');
 
   const displayName = localName !== municipalityName ? `${localName} (Gemeinde ${municipalityName})` : localName;
-  const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fährt gerade durch ${displayName} (${region}).
+  const prompt = `Du bist ein freundlicher Reisebegleiter im Auto. Der Fahrer fÃ¤hrt gerade durch ${displayName} (${region}).
 
 ${wikiContext ? `Hintergrundinformation aus Wikipedia:\n${wikiContext}\n` : ''}
 
-Schreibe eine kurze, natürliche Sprachinformation über ${localName} auf Deutsch. Fokus auf: ${cats.join(', ')}.
+Schreibe eine kurze, natÃ¼rliche Sprachinformation Ã¼ber ${localName} auf Deutsch. Fokus auf: ${cats.join(', ')}.
 
 Regeln:
-- 6-8 Sätze, fliessend und angenehm zum Vorlesen
+- 6-8 SÃ¤tze, fliessend und angenehm zum Vorlesen
 - Keine eckigen Klammern, keine Fussnoten, kein Markdown
-- Direkte, angenehme Sprache wie ein Reiseführer
+- Direkte, angenehme Sprache wie ein ReisefÃ¼hrer
 - Beginne mit "${localName} ist..."`;
 
   try {
@@ -1345,7 +1345,7 @@ async function updateLocation(lat, lon, force = false) {
   if (!nominatim) return;
 
   const placeName = extractPlaceName(nominatim);       // lokaler Ortsname (Anzeige)
-  const municipalityName = extractMunicipalityName(nominatim); // Gemeinde (für Wikipedia/Claude)
+  const municipalityName = extractMunicipalityName(nominatim); // Gemeinde (fÃ¼r Wikipedia/Claude)
   const region = extractRegion(nominatim);
 
   document.getElementById('locationName').textContent = placeName;
@@ -1365,13 +1365,13 @@ async function updateLocation(lat, lon, force = false) {
   document.getElementById('infoText').className = 'info-text loading';
   document.getElementById('infoText').textContent = `Lade Infos zu ${placeName}...`;
   document.getElementById('audioStatus').textContent = `Lade ${placeName}...`;
-  document.getElementById('statPop').textContent = '—';
-  document.getElementById('statArea').textContent = '—';
-  document.getElementById('statElev').textContent = '—';
+  document.getElementById('statPop').textContent = 'â€”';
+  document.getElementById('statArea').textContent = 'â€”';
+  document.getElementById('statElev').textContent = 'â€”';
 
   // Region stat
-  const stateShort = nominatim.address?.state || region.split(',')[0] || '—';
-  document.getElementById('statRegion').textContent = stateShort.length > 10 ? stateShort.substring(0,9)+'…' : stateShort;
+  const stateShort = nominatim.address?.state || region.split(',')[0] || 'â€”';
+  document.getElementById('statRegion').textContent = stateShort.length > 10 ? stateShort.substring(0,9)+'â€¦' : stateShort;
 
   // Wikidata + Wikipedia in parallel
   const [wikiStats, claudeText] = await Promise.all([
@@ -1381,9 +1381,9 @@ async function updateLocation(lat, lon, force = false) {
 
   // Update stats
   if (wikiStats) {
-    document.getElementById('statPop').textContent = wikiStats.population || '—';
-    document.getElementById('statArea').textContent = wikiStats.area || '—';
-    document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+    document.getElementById('statPop').textContent = wikiStats.population || 'â€”';
+    document.getElementById('statArea').textContent = wikiStats.area || 'â€”';
+    document.getElementById('statElev').textContent = wikiStats.elevation || 'â€”';
   }
 
   if (claudeText) {
@@ -1392,7 +1392,7 @@ async function updateLocation(lat, lon, force = false) {
     speak(claudeText);
   } else {
     document.getElementById('infoText').className = 'info-text loading';
-    document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfügbar.`;
+    document.getElementById('infoText').textContent = `Keine weiteren Infos zu ${placeName} verfÃ¼gbar.`;
   }
 }
 
@@ -1415,7 +1415,7 @@ function addToLog(place, region) {
 // ============================================================
 function startTracking() {
   if (!navigator.geolocation) {
-    showToast('⚠️ GPS nicht verfügbar auf diesem Gerät');
+    showToast('âš ï¸ GPS nicht verfÃ¼gbar auf diesem GerÃ¤t');
     return;
   }
 
@@ -1425,7 +1425,7 @@ function startTracking() {
   setStatus('active');
   state.tracking = true;
 
-  showToast('GPS aktiviert – fahre los!');
+  showToast('GPS aktiviert â€“ fahre los!');
 
   state.watchId = navigator.geolocation.watchPosition(
     (pos) => {
@@ -1434,7 +1434,7 @@ function startTracking() {
     },
     (err) => {
       setStatus('error');
-      showToast('⚠️ GPS-Fehler: ' + err.message);
+      showToast('âš ï¸ GPS-Fehler: ' + err.message);
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
   );
@@ -1458,7 +1458,7 @@ function forceUpdate() {
   state.lastSpokenPlace = null; // Reset so same place is re-fetched
   navigator.geolocation.getCurrentPosition(
     (pos) => updateLocation(pos.coords.latitude, pos.coords.longitude, true),
-    () => showToast('GPS-Signal nicht verfügbar')
+    () => showToast('GPS-Signal nicht verfÃ¼gbar')
   );
 }
 
@@ -1500,11 +1500,11 @@ async function showDemo() {
   setStatus('active');
   state.tracking = true;
 
-  showToast('Demo-Modus: Bern → Interlaken');
+  showToast('Demo-Modus: Bern â†’ Interlaken');
   demoRunning = true;
 
   const runDemo = async () => {
-    if (!demoRunning) return; // Abbruch wenn Stop gedrückt
+    if (!demoRunning) return; // Abbruch wenn Stop gedrÃ¼ckt
     if (demoIndex >= demoPlaces.length) {
       stopTracking();
       return;
@@ -1524,24 +1524,24 @@ async function showDemo() {
     ]);
 
     if (wikiStats) {
-      document.getElementById('statPop').textContent = wikiStats.population || '—';
-      document.getElementById('statArea').textContent = wikiStats.area || '—';
-      document.getElementById('statElev').textContent = wikiStats.elevation || '—';
+      document.getElementById('statPop').textContent = wikiStats.population || 'â€”';
+      document.getElementById('statArea').textContent = wikiStats.area || 'â€”';
+      document.getElementById('statElev').textContent = wikiStats.elevation || 'â€”';
     }
     const shortRegion = p.region.split(',')[0];
-    document.getElementById('statRegion').textContent = shortRegion.length > 10 ? shortRegion.substring(0,9)+'…' : shortRegion;
+    document.getElementById('statRegion').textContent = shortRegion.length > 10 ? shortRegion.substring(0,9)+'â€¦' : shortRegion;
 
     if (demoIndex < demoPlaces.length) {
       if (claudeText) {
         document.getElementById('infoText').className = 'info-text';
         document.getElementById('infoText').textContent = claudeText;
-        // Warte bis Sprachausgabe fertig, dann 4s Pause, dann nächster Ort
+        // Warte bis Sprachausgabe fertig, dann 4s Pause, dann nÃ¤chster Ort
         speakAndThen(claudeText, () => { if (demoRunning) setTimeout(runDemo, 4000); });
       } else {
         if (demoRunning) setTimeout(runDemo, 5000);
       }
     } else {
-      // Letzter Ort – einfach vorlesen ohne weiterzuschalten
+      // Letzter Ort â€“ einfach vorlesen ohne weiterzuschalten
       if (claudeText) {
         document.getElementById('infoText').className = 'info-text';
         document.getElementById('infoText').textContent = claudeText;
